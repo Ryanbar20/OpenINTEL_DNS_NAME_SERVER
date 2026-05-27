@@ -1,6 +1,8 @@
 package ns
 
 import (
+	"fmt"
+	"sync"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -39,7 +41,7 @@ func TestCache(t *testing.T) {
 	}
 
 	if _, b := cache.get(&txt1); b != false {
-		t.Error("cache index txt2 should be msg2")
+		t.Error("cache index txt1 should be nil")
 		t.Fail()
 	}
 
@@ -47,4 +49,88 @@ func TestCache(t *testing.T) {
 		t.Error("cache index txt2 should be msg2")
 		t.Fail()
 	}
+}
+
+func TestCacheMultiThread(t *testing.T) {
+	// initialize test data
+
+	cache := newCache(100)
+
+	var txts []dns.RR = make([]dns.RR, 400)
+	var anss []dns.RR = make([]dns.RR, 400)
+	var msgs []dns.Msg = make([]dns.Msg, 400)
+	for i := 0; i < 400; i++ {
+		txts[i] = &dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{fmt.Sprintf("Test %d", i)}}}
+		anss[i] = &dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{fmt.Sprintf("Answer %d", i)}}}
+		msgs[i] = *dns.NewMsg(txts[i].String(), dns.TypeTXT)
+		msgs[i].Answer = append(msgs[i].Answer, anss[i])
+	}
+
+	var wg sync.WaitGroup
+	var start sync.WaitGroup
+	wg.Add(2)
+	start.Add(1)
+	// make goroutines that add to the cache
+	go func() {
+		defer wg.Done()
+		start.Wait()
+		for i := 0; i < 200; i++ {
+			cache.put(txts[i], &msgs[i])
+		}
+	}()
+
+	go func() {
+
+		defer wg.Done()
+		start.Wait()
+		for i := 200; i < 400; i++ {
+			cache.put(txts[i], &msgs[i])
+		}
+	}()
+
+	// start goroutines at the same time
+	start.Done()
+
+	// wait for them to exit and make some assertions
+	wg.Wait()
+	if len(cache.order) != cache.maximum_size {
+		t.Error("cache order length should be 100 as that is the maximum")
+		t.Fail()
+	}
+
+	if len(cache.data) != cache.maximum_size {
+		t.Error("cache map length should be 100 as that is the maximum")
+		t.Fail()
+	}
+
+	for i := 0; i < 100; i++ {
+		if _, b := cache.get(txts[i]); b != false {
+			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
+			t.Fail()
+		}
+	}
+
+	for i := 100; i < 200; i++ {
+		if m, b := cache.get(txts[i]); b != false && m.String() != msgs[i].String() {
+			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
+			t.Fail()
+		}
+	}
+
+	for i := 200; i < 300; i++ {
+		if _, b := cache.get(txts[i]); b != false {
+			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
+			t.Fail()
+		}
+	}
+
+	for i := 300; i < 400; i++ {
+		if m, b := cache.get(txts[i]); b != false && m.String() != msgs[i].String() {
+			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
+			t.Fail()
+		}
+	}
+
+	fmt.Println(cache.order)
+
 }
