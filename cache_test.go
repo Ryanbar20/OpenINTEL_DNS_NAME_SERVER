@@ -31,21 +31,21 @@ func TestCache(t *testing.T) {
 	msg3 := dns.NewMsg(txt3.String(), dns.TypeTXT)
 	msg3.Answer = append(msg3.Answer, &a3)
 
-	cache.put(&txt1, msg1)
-	cache.put(&txt2, msg2)
-	cache.put(&txt3, msg3)
+	cache.Put(&txt1, msg1)
+	cache.Put(&txt2, msg2)
+	cache.Put(&txt3, msg3)
 
 	if len(cache.order) != 2 {
 		t.Error("cache length should be 2 as that is the maximum")
 		t.Fail()
 	}
 
-	if _, b := cache.get(&txt1); b != false {
+	if _, b := cache.Get(&txt1); b != false {
 		t.Error("cache index txt1 should be nil")
 		t.Fail()
 	}
 
-	if m, _ := cache.get(&txt2); m.String() != msg2.String() {
+	if m, _ := cache.Get(&txt2); m.String() != msg2.String() {
 		t.Error("cache index txt2 should be msg2")
 		t.Fail()
 	}
@@ -75,7 +75,7 @@ func TestCacheMultiThread(t *testing.T) {
 		defer wg.Done()
 		start.Wait()
 		for i := 0; i < 200; i++ {
-			cache.put(txts[i], &msgs[i])
+			cache.Put(txts[i], &msgs[i])
 		}
 	}()
 
@@ -84,7 +84,7 @@ func TestCacheMultiThread(t *testing.T) {
 		defer wg.Done()
 		start.Wait()
 		for i := 200; i < 400; i++ {
-			cache.put(txts[i], &msgs[i])
+			cache.Put(txts[i], &msgs[i])
 		}
 	}()
 
@@ -104,28 +104,28 @@ func TestCacheMultiThread(t *testing.T) {
 	}
 
 	for i := 0; i < 100; i++ {
-		if _, b := cache.get(txts[i]); b != false {
+		if _, b := cache.Get(txts[i]); b != false {
 			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
 			t.Fail()
 		}
 	}
 
 	for i := 100; i < 200; i++ {
-		if m, b := cache.get(txts[i]); b != false && m.String() != msgs[i].String() {
+		if m, b := cache.Get(txts[i]); b != false && m.String() != msgs[i].String() {
 			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
 			t.Fail()
 		}
 	}
 
 	for i := 200; i < 300; i++ {
-		if _, b := cache.get(txts[i]); b != false {
+		if _, b := cache.Get(txts[i]); b != false {
 			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
 			t.Fail()
 		}
 	}
 
 	for i := 300; i < 400; i++ {
-		if m, b := cache.get(txts[i]); b != false && m.String() != msgs[i].String() {
+		if m, b := cache.Get(txts[i]); b != false && m.String() != msgs[i].String() {
 			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
 			t.Fail()
 		}
