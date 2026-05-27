@@ -95,42 +95,34 @@ func TestCacheMultiThread(t *testing.T) {
 	wg.Wait()
 	if len(cache.order) != cache.maximum_size {
 		t.Error("cache order length should be 100 as that is the maximum")
-		t.Fail()
 	}
 
 	if len(cache.data) != cache.maximum_size {
 		t.Error("cache map length should be 100 as that is the maximum")
-		t.Fail()
 	}
 
 	for i := 0; i < 100; i++ {
 		if _, b := cache.Get(txts[i]); b != false {
 			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
-			t.Fail()
 		}
 	}
 
 	for i := 100; i < 200; i++ {
 		if m, b := cache.Get(txts[i]); b != false && m.String() != msgs[i].String() {
 			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
-			t.Fail()
 		}
 	}
 
 	for i := 200; i < 300; i++ {
 		if _, b := cache.Get(txts[i]); b != false {
 			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
-			t.Fail()
 		}
 	}
 
 	for i := 300; i < 400; i++ {
 		if m, b := cache.Get(txts[i]); b != false && m.String() != msgs[i].String() {
 			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
-			t.Fail()
 		}
 	}
-
-	fmt.Println(cache.order)
 
 }
