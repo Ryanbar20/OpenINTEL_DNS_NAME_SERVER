@@ -126,7 +126,7 @@ func TXT_query(nd NameData, db *sql.DB) (*[]dns.RR, error) {
 	return &result, nil
 }
 
-func MX_query(nd NameData, db *sql.DB) ([]*dns.RR, error) { //TODO
+func MX_query(nd NameData, db *sql.DB) (*[]dns.RR, error) { //TODO
 	query := fmt.Sprintf(`
 		SELECT query_name, query_type, mx_address, mx_preference 
 		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
@@ -134,9 +134,11 @@ func MX_query(nd NameData, db *sql.DB) ([]*dns.RR, error) { //TODO
 	`, nd.tld, nd.year, nd.month, nd.day, nd.domain)
 
 	db.Query(query)
+	return nil, nil
 }
 
-func NS_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
+func NS_query(nd NameData, db *sql.DB) (*[]dns.RR, error) {
+	result := make([]dns.RR, 0)
 	query := fmt.Sprintf(`
 		SELECT ns_address 
 		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
