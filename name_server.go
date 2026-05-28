@@ -3,12 +3,14 @@ package ns
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 type NameServer struct {
@@ -16,8 +18,18 @@ type NameServer struct {
 	cache       Cache
 }
 
-func handle(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+	if err := r.Unpack(); err != nil {
+		log.Fatalf("%s", err.Error())
+	}
+	var hdr = &dns.Header{Name: r.Question[0].Header().Name + dom, Class: dns.ClassINET}
+	r.Reset() // re-use r
+	r.Response = true
+	ns.query_queue.Push(r.Question[0])
+	r.Answer = append(r.Answer, &dns.HINFO{Hdr: *hdr, HINFO: rdata.HINFO{Cpu: "test", Os: "test2"}})
 
+	r.Pack()
+	io.Copy(w, r)
 }
 
 func serve(net string) {
@@ -34,7 +46,7 @@ func newNameServer(cache_limit int, queue_limit int) *NameServer {
 
 func (ns *NameServer) start() {
 
-	dns.HandleFunc(dom, handle)
+	dns.HandleFunc(dom, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) { handle(ns, ctx, w, r) })
 
 	go query_thread(&ns.query_queue, &ns.cache)
 	go serve("udp")
