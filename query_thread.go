@@ -12,15 +12,15 @@ import (
 	_ "github.com/duckdb/duckdb-go/v2"
 )
 
-func A_query(nd NameData, db *sql.DB) ([]*dns.A, error) {
+func A_query(nd NameData, db *sql.DB) (*[]dns.RR, error) {
 
-	result := make([]*dns.A, 0)
+	result := make([]dns.RR, 0)
 
 	query := fmt.Sprintf(`
 		SELECT ip4_address 
 		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'A';
-	`, nd.tld, nd.year, nd.month, nd.day, dom)
+	`, nd.tld, nd.year, nd.month, nd.day, nd.domain)
 
 	rows, err := db.Query(query)
 
@@ -50,7 +50,7 @@ func A_query(nd NameData, db *sql.DB) ([]*dns.A, error) {
 
 	}
 
-	return result, nil
+	return &result, nil
 }
 
 func AAAA_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
@@ -58,7 +58,7 @@ func AAAA_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
 		SELECT query_name, query_type, ip6_address 
 		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'AAAA';
-	`, nd.tld, nd.year, nd.month, nd.day, dom)
+	`, nd.tld, nd.year, nd.month, nd.day, nd.domain)
 
 	rows, err := db.Query(query)
 
@@ -74,7 +74,7 @@ func TXT_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
 		SELECT query_name, query_type, txt_text 
 		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'TXT';
-	`, nd.tld, nd.year, nd.month, nd.day, dom)
+	`, nd.tld, nd.year, nd.month, nd.day, nd.domain)
 
 	rows, err := db.Query(query)
 
@@ -90,7 +90,7 @@ func MX_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
 		SELECT query_name, query_type, mx_address, mx_preference 
 		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'MX';
-	`, nd.tld, nd.year, nd.month, nd.day, dom)
+	`, nd.tld, nd.year, nd.month, nd.day, nd.domain)
 
 	rows, err := db.Query(query)
 
@@ -106,7 +106,7 @@ func NS_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
 		SELECT query_name, query_type, ns_address 
 		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'NS';
-	`, nd.tld, nd.year, nd.month, nd.day, dom)
+	`, nd.tld, nd.year, nd.month, nd.day, nd.domain)
 
 	rows, err := db.Query(query)
 
@@ -150,11 +150,12 @@ func query_thread(query_queue *Queue, cache *Cache) {
 			// refuse
 			continue
 		}
-		var rrs *[]dns.RR
-		var err error
 		switch question.(type) {
 		case *dns.A:
-			rrs, err = A_query(data, db)
+			rrs, err := A_query(data, db)
+			if err == nil {
+				cache.Put(question, rrs)
+			}
 		case *dns.AAAA:
 			A_query(data, db)
 		case *dns.TXT:
@@ -167,13 +168,6 @@ func query_thread(query_queue *Queue, cache *Cache) {
 			// refuse
 		}
 
-		if err != nil {
-			query_queue.PopBlocking() // remove the question from the queue
-			continue
-		}
-
-		cache.Put(question, rrs)
 		query_queue.PopBlocking() // remove the question from the queue
-
 	}
 }
