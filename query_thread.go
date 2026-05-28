@@ -9,6 +9,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/rdata"
+	_ "github.com/duckdb/duckdb-go/v2"
 )
 
 func A_query(nd NameData, db *sql.DB) ([]*dns.A, error) {
