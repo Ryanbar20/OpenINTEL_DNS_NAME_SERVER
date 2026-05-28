@@ -40,11 +40,11 @@ func serve(net string) {
 	}
 }
 
-func newNameServer(cache_limit int, queue_limit int) *NameServer {
+func NewNameServer(cache_limit int, queue_limit int) *NameServer {
 	return &NameServer{query_queue: *newQueue(queue_limit), cache: *newCache(cache_limit)}
 }
 
-func (ns *NameServer) start() {
+func (ns *NameServer) Start() {
 
 	dns.HandleFunc(dom, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) { handle(ns, ctx, w, r) })
 
