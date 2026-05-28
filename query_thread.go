@@ -65,6 +65,7 @@ func AAAA_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
 		return nil, errors.New("rows could not be gotten")
 	}
 	defer rows.Close()
+	return nil, nil
 }
 
 func TXT_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
@@ -80,6 +81,7 @@ func TXT_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
 		return nil, errors.New("rows could not be gotten")
 	}
 	defer rows.Close()
+	return nil, nil
 }
 
 func MX_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
@@ -95,6 +97,7 @@ func MX_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
 		return nil, errors.New("rows could not be gotten")
 	}
 	defer rows.Close()
+	return nil, nil
 }
 
 func NS_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
@@ -110,6 +113,7 @@ func NS_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
 		return nil, errors.New("rows could not be gotten")
 	}
 	defer rows.Close()
+	return nil, nil
 }
 
 func query_thread(query_queue *Queue, cache *Cache) {
@@ -149,23 +153,19 @@ func query_thread(query_queue *Queue, cache *Cache) {
 		switch question.(type) {
 		case *dns.A:
 			msg = dns.NewMsg(question.String(), dns.TypeA)
-			rr, err := A_query(data, db)
+			A_query(data, db)
 		case *dns.AAAA:
 			msg = dns.NewMsg(question.String(), dns.TypeA)
 			A_query(data, db)
-			rr, err := A_query(data, db)
 		case *dns.TXT:
 			msg = dns.NewMsg(question.String(), dns.TypeA)
 			A_query(data, db)
-			rr, err := A_query(data, db)
 		case *dns.MX:
 			msg = dns.NewMsg(question.String(), dns.TypeA)
 			A_query(data, db)
-			rr, err := A_query(data, db)
 		case *dns.NS:
 			msg = dns.NewMsg(question.String(), dns.TypeA)
 			A_query(data, db)
-			rr, err := A_query(data, db)
 		default:
 			// refuse
 		}

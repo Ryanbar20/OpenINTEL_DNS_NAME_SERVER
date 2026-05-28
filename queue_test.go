@@ -10,6 +10,7 @@ import (
 )
 
 func TestQueueOrder(t *testing.T) {
+	var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}
 	q := newQueue(400)
 
 	var txts []dns.RR = make([]dns.RR, 400)
