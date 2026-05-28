@@ -142,7 +142,7 @@ func query_thread(query_queue *Queue, cache *Cache) {
 	}
 
 	for {
-		question := query_queue.PopBlocking()
+		question := query_queue.PeekBlocking() // get the question
 
 		name := question.Header().Name
 		data, success := parseName(name)
@@ -150,26 +150,23 @@ func query_thread(query_queue *Queue, cache *Cache) {
 			// refuse
 			continue
 		}
-		var msg *dns.Msg
+		var rrs *[]dns.RR
 		switch question.(type) {
 		case *dns.A:
-			msg = dns.NewMsg(question.String(), dns.TypeA)
 			A_query(data, db)
 		case *dns.AAAA:
-			msg = dns.NewMsg(question.String(), dns.TypeA)
 			A_query(data, db)
 		case *dns.TXT:
-			msg = dns.NewMsg(question.String(), dns.TypeA)
 			A_query(data, db)
 		case *dns.MX:
-			msg = dns.NewMsg(question.String(), dns.TypeA)
 			A_query(data, db)
 		case *dns.NS:
-			msg = dns.NewMsg(question.String(), dns.TypeA)
 			A_query(data, db)
 		default:
 			// refuse
 		}
-		cache.Put(question, msg)
+		cache.Put(question, rrs)
+
+		query_queue.PopBlocking() // remove the question from the queue
 	}
 }

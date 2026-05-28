@@ -40,6 +40,16 @@ func (q *Queue) Find(rr dns.RR) int {
 	return -1
 }
 
+func (q *Queue) PeekBlocking() dns.RR {
+	q.cond.L.Lock()
+	defer q.cond.L.Unlock()
+	for len(q.questions) == 0 {
+		q.cond.Wait()
+	}
+	rr := q.questions[0]
+	return rr
+}
+
 func (q *Queue) PopBlocking() dns.RR {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()

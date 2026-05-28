@@ -17,20 +17,13 @@ func TestCache(t *testing.T) {
 	txt2 := dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Test2"}}}
 	txt3 := dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Test3"}}}
 
-	a1 := dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Answer1"}}}
-	a2 := dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Answer2"}}}
-	a3 := dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Answer3"}}}
+	a1 := []dns.RR{&dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Answer1"}}}}
+	a2 := []dns.RR{&dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Answer2"}}}}
+	a3 := []dns.RR{&dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Answer3"}}}}
 
-	msg1 := dns.NewMsg(txt1.String(), dns.TypeTXT)
-	msg1.Answer = append(msg1.Answer, &a1)
-	msg2 := dns.NewMsg(txt2.String(), dns.TypeTXT)
-	msg2.Answer = append(msg2.Answer, &a2)
-	msg3 := dns.NewMsg(txt3.String(), dns.TypeTXT)
-	msg3.Answer = append(msg3.Answer, &a3)
-
-	cache.Put(&txt1, msg1)
-	cache.Put(&txt2, msg2)
-	cache.Put(&txt3, msg3)
+	cache.Put(&txt1, &a1)
+	cache.Put(&txt2, &a2)
+	cache.Put(&txt3, &a3)
 
 	if len(cache.order) != 2 {
 		t.Error("cache length should be 2 as that is the maximum")
@@ -42,7 +35,7 @@ func TestCache(t *testing.T) {
 		t.Fail()
 	}
 
-	if m, _ := cache.Get(&txt2); m.String() != msg2.String() {
+	if m, _ := cache.Get(&txt2); (*m)[0].String() != a2[0].String() {
 		t.Error("cache index txt2 should be msg2")
 		t.Fail()
 	}
@@ -56,13 +49,10 @@ func TestCacheMultiThread(t *testing.T) {
 	cache := newCache(100)
 
 	var txts []dns.RR = make([]dns.RR, 400)
-	var anss []dns.RR = make([]dns.RR, 400)
-	var msgs []dns.Msg = make([]dns.Msg, 400)
+	var anss [][]dns.RR = make([][]dns.RR, 400)
 	for i := 0; i < 400; i++ {
 		txts[i] = &dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{fmt.Sprintf("Test %d", i)}}}
-		anss[i] = &dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{fmt.Sprintf("Answer %d", i)}}}
-		msgs[i] = *dns.NewMsg(txts[i].String(), dns.TypeTXT)
-		msgs[i].Answer = append(msgs[i].Answer, anss[i])
+		anss[i] = []dns.RR{&dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{fmt.Sprintf("Answer %d", i)}}}}
 	}
 
 	var wg sync.WaitGroup
@@ -74,7 +64,7 @@ func TestCacheMultiThread(t *testing.T) {
 		defer wg.Done()
 		start.Wait()
 		for i := 0; i < 200; i++ {
-			cache.Put(txts[i], &msgs[i])
+			cache.Put(txts[i], &anss[i])
 		}
 	}()
 
@@ -83,7 +73,7 @@ func TestCacheMultiThread(t *testing.T) {
 		defer wg.Done()
 		start.Wait()
 		for i := 200; i < 400; i++ {
-			cache.Put(txts[i], &msgs[i])
+			cache.Put(txts[i], &anss[i])
 		}
 	}()
 
@@ -107,7 +97,7 @@ func TestCacheMultiThread(t *testing.T) {
 	}
 
 	for i := 100; i < 200; i++ {
-		if m, b := cache.Get(txts[i]); b != false && m.String() != msgs[i].String() {
+		if m, b := cache.Get(txts[i]); b != false && (*m)[0].String() != anss[i][0].String() {
 			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
 		}
 	}
@@ -119,7 +109,7 @@ func TestCacheMultiThread(t *testing.T) {
 	}
 
 	for i := 300; i < 400; i++ {
-		if m, b := cache.Get(txts[i]); b != false && m.String() != msgs[i].String() {
+		if m, b := cache.Get(txts[i]); b != false && (*m)[0].String() != anss[i][0].String() {
 			t.Error(fmt.Sprintf("cache index txt%d should be nil", i))
 		}
 	}
