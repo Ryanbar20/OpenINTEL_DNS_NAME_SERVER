@@ -25,7 +25,7 @@ func (c *Cache) Put(rr dns.RR, msg *dns.Msg) {
 		delete(c.data, c.order[0])
 		c.order = c.order[1:]
 	}
-	c.data[rr.String()] = msg.Copy()
+	c.data[rr.String()] = msg
 	c.order = append(c.order, rr.String())
 }
 
