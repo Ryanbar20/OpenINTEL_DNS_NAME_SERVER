@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type Name_data struct {
+type NameData struct {
 	tld    string
 	domain string
 	year   int
@@ -14,7 +14,7 @@ type Name_data struct {
 }
 
 // returns the data in the domain name
-func parseName(name string) (data Name_data, b bool) {
+func parseName(name string) (data NameData, b bool) {
 	labels := strings.Split(name, ".")
 	if labels[0] == "www" { // ignore www label
 		labels = labels[1:]
@@ -30,12 +30,12 @@ func parseName(name string) (data Name_data, b bool) {
 		labels[l-3] != "history" ||
 		labels[l-2] != "openintel" ||
 		labels[l-1] != "nl" {
-		return Name_data{}, false
+		return NameData{}, false
 	}
 
 	ymd, err := time.Parse("20060102", labels[0])
 	if err != nil { // if not a valid YYYYMMDD
-		return Name_data{}, false
+		return NameData{}, false
 	}
 
 	y, m, d := ymd.Year(), int(ymd.Month()), ymd.Day()
@@ -45,6 +45,6 @@ func parseName(name string) (data Name_data, b bool) {
 
 	tld := labels[l-4]
 
-	return Name_data{tld: tld, domain: domain, year: y, month: m, day: d}, true
+	return NameData{tld: tld, domain: domain, year: y, month: m, day: d}, true
 
 }

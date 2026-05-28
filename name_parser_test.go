@@ -8,13 +8,13 @@ import (
 func TestNameParser(t *testing.T) {
 	type questionDataPair struct {
 		question string
-		data     Name_data
+		data     NameData
 	}
 	validQueries := []questionDataPair{
-		{question: "20060202.www.example.com.history.openintel.nl", data: Name_data{tld: "com", domain: "www.example.com.", year: 2006, month: 2, day: 2}},
-		{question: "20060302.example.com.history.openintel.nl", data: Name_data{tld: "com", domain: "example.com.", year: 2006, month: 3, day: 2}},
-		{question: "www.20070202.www.example.com.history.openintel.nl", data: Name_data{tld: "com", domain: "www.example.com.", year: 2007, month: 2, day: 2}},
-		{question: "20060202.www.test.abc.edf.com.history.openintel.nl.", data: Name_data{tld: "com", domain: "www.test.abc.edf.com.", year: 2006, month: 2, day: 2}},
+		{question: "20060202.www.example.com.history.openintel.nl", data: NameData{tld: "com", domain: "www.example.com.", year: 2006, month: 2, day: 2}},
+		{question: "20060302.example.com.history.openintel.nl", data: NameData{tld: "com", domain: "example.com.", year: 2006, month: 3, day: 2}},
+		{question: "www.20070202.www.example.com.history.openintel.nl", data: NameData{tld: "com", domain: "www.example.com.", year: 2007, month: 2, day: 2}},
+		{question: "20060202.www.test.abc.edf.com.history.openintel.nl.", data: NameData{tld: "com", domain: "www.test.abc.edf.com.", year: 2006, month: 2, day: 2}},
 	}
 	for _, q := range validQueries {
 		if n, b := parseName(q.question); b != true || n != q.data {
