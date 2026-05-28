@@ -151,9 +151,10 @@ func query_thread(query_queue *Queue, cache *Cache) {
 			continue
 		}
 		var rrs *[]dns.RR
+		var err error
 		switch question.(type) {
 		case *dns.A:
-			A_query(data, db)
+			rrs, err = A_query(data, db)
 		case *dns.AAAA:
 			A_query(data, db)
 		case *dns.TXT:
@@ -165,8 +166,14 @@ func query_thread(query_queue *Queue, cache *Cache) {
 		default:
 			// refuse
 		}
-		cache.Put(question, rrs)
 
+		if err != nil {
+			query_queue.PopBlocking() // remove the question from the queue
+			continue
+		}
+
+		cache.Put(question, rrs)
 		query_queue.PopBlocking() // remove the question from the queue
+
 	}
 }

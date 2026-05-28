@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 type NameServer struct {
@@ -21,15 +22,20 @@ func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 	if err := r.Unpack(); err != nil {
 		log.Fatalf("%s", err.Error())
 	}
-	//var hdr = &dns.Header{Name: r.Question[0].Header().Name + dom, Class: dns.ClassINET}
+	var hdr = &dns.Header{Name: r.Question[0].Header().Name + dom, Class: dns.ClassINET}
 	r.Reset() // re-use r
 	r.Response = true
 
 	if a, b := ns.cache.Get(r.Question[0]); b == true {
 		r.Answer = append(r.Answer, *a...)
+		r.Pack()
+		io.Copy(w, r)
+		return
 	}
 
 	ns.query_queue.Push(r.Question[0])
+
+	r.Answer = append(r.Answer, &dns.HINFO{Hdr: *hdr, HINFO: rdata.HINFO{Cpu: "QUEUE", Os: "QUEUE"}})
 
 	r.Pack()
 	io.Copy(w, r)
