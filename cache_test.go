@@ -9,11 +9,8 @@ import (
 	"codeberg.org/miekg/dns/rdata"
 )
 
-const dom = "test.nl."
-
-var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}
-
 func TestCache(t *testing.T) {
+	var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}
 	cache := newCache(2)
 
 	txt1 := dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Test1"}}}
@@ -52,6 +49,8 @@ func TestCache(t *testing.T) {
 }
 
 func TestCacheMultiThread(t *testing.T) {
+
+	var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}
 	// initialize test data
 
 	cache := newCache(100)
