@@ -53,9 +53,11 @@ func A_query(nd NameData, db *sql.DB) (*[]dns.RR, error) {
 	return &result, nil
 }
 
-func AAAA_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
+func AAAA_query(nd NameData, db *sql.DB) (*[]dns.RR, error) {
+	result := make([]dns.RR, 0)
+
 	query := fmt.Sprintf(`
-		SELECT query_name, query_type, ip6_address 
+		SELECT ip6_address 
 		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'AAAA';
 	`, nd.tld, nd.year, nd.month, nd.day, nd.domain)
@@ -66,12 +68,36 @@ func AAAA_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
 		return nil, errors.New("rows could not be gotten")
 	}
 	defer rows.Close()
-	return nil, nil
+	var hdr = &dns.Header{Name: nd.domain + dom, Class: dns.ClassINET}
+
+	for rows.Next() {
+		var ip6addr string
+
+		err := rows.Scan(&ip6addr)
+
+		if err != nil {
+			return nil, errors.New("row could not be parsed")
+
+		}
+
+		addr, err := netip.ParseAddr(ip6addr)
+
+		if err != nil {
+			return nil, errors.New("row could not be parsed")
+
+		}
+		result = append(result, &dns.AAAA{Hdr: *hdr, AAAA: rdata.AAAA{Addr: addr}})
+
+	}
+
+	return &result, nil
 }
 
-func TXT_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
+func TXT_query(nd NameData, db *sql.DB) (*[]dns.RR, error) {
+	result := make([]dns.RR, 0)
+
 	query := fmt.Sprintf(`
-		SELECT query_name, query_type, txt_text 
+		SELECT txt_text 
 		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'TXT';
 	`, nd.tld, nd.year, nd.month, nd.day, nd.domain)
@@ -82,28 +108,37 @@ func TXT_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
 		return nil, errors.New("rows could not be gotten")
 	}
 	defer rows.Close()
-	return nil, nil
+	var hdr = &dns.Header{Name: nd.domain + dom, Class: dns.ClassINET}
+
+	for rows.Next() {
+		var txt string
+
+		err := rows.Scan(&txt)
+
+		if err != nil {
+			return nil, errors.New("row could not be parsed")
+
+		}
+		result = append(result, &dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{txt}}})
+
+	}
+
+	return &result, nil
 }
 
-func MX_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
+func MX_query(nd NameData, db *sql.DB) ([]*dns.RR, error) { //TODO
 	query := fmt.Sprintf(`
 		SELECT query_name, query_type, mx_address, mx_preference 
 		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'MX';
 	`, nd.tld, nd.year, nd.month, nd.day, nd.domain)
 
-	rows, err := db.Query(query)
-
-	if err != nil {
-		return nil, errors.New("rows could not be gotten")
-	}
-	defer rows.Close()
-	return nil, nil
+	db.Query(query)
 }
 
 func NS_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
 	query := fmt.Sprintf(`
-		SELECT query_name, query_type, ns_address 
+		SELECT ns_address 
 		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'NS';
 	`, nd.tld, nd.year, nd.month, nd.day, nd.domain)
@@ -114,7 +149,22 @@ func NS_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
 		return nil, errors.New("rows could not be gotten")
 	}
 	defer rows.Close()
-	return nil, nil
+	var hdr = &dns.Header{Name: nd.domain + dom, Class: dns.ClassINET}
+
+	for rows.Next() {
+		var ns_addr string
+
+		err := rows.Scan(&ns_addr)
+
+		if err != nil {
+			return nil, errors.New("row could not be parsed")
+
+		}
+		result = append(result, &dns.NS{Hdr: *hdr, NS: rdata.NS{Ns: ns_addr}})
+
+	}
+
+	return &result, nil
 }
 
 func query_thread(query_queue *Queue, cache *Cache) {
