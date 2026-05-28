@@ -9,6 +9,7 @@ var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}
 
 func main() {
 
+	nameserver := ns.
 	// dns.HandleFunc(dom, handle_query)
 
 	// go query_thread()

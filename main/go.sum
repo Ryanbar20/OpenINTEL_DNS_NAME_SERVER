@@ -1,0 +1,12 @@
+codeberg.org/miekg/dns v0.6.79 h1:ixlSbch4aCtV/GuhBgbPw33V3tqovMFSOGyPA9u48FM=
+codeberg.org/miekg/dns v0.6.79/go.mod h1:58Y3ZTg6Z5ZEm/ZAAwHehbZfrD4u5mE4RByHoPEMyKk=
+github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.0-20260528140149-c54a4b8498e8 h1:WXwCa1BBNWLNdJShqs+IvVeWCbjdoprrBRCwAAycIpI=
+github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.0-20260528140149-c54a4b8498e8/go.mod h1:mNLN4/vwdlCuieKf8X/vCqkThimaamC2KaqOVTVTSIk=
+github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.1 h1:Z1jokyabA8/ea4q4FrFcGmg3u9Ano0bb+UpBmXrwffo=
+github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.1/go.mod h1:mNLN4/vwdlCuieKf8X/vCqkThimaamC2KaqOVTVTSIk=
+golang.org/x/crypto v0.48.0 h1:/VRzVqiRSggnhY7gNRxPauEQ5Drw9haKdM0jqfcCFts=
+golang.org/x/crypto v0.48.0/go.mod h1:r0kV5h3qnFPlQnBSrULhlsRfryS2pmewsg+XfMgkVos=
+golang.org/x/net v0.51.0 h1:94R/GTO7mt3/4wIKpcR5gkGmRLOuE/2hNGeWq/GBIFo=
+golang.org/x/net v0.51.0/go.mod h1:aamm+2QF5ogm02fjy5Bb7CQ0WMt1/WVM7FtyaTLlA9Y=
+golang.org/x/sys v0.41.0 h1:Ivj+2Cp/ylzLiEU89QhWblYnOE9zerudt9Ftecq2C6k=
+golang.org/x/sys v0.41.0/go.mod h1:OgkHotnGiDImocRcuBABYBEXf8A9a87e/uXjp9XT3ks=
