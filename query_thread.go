@@ -12,9 +12,9 @@ import (
 	_ "github.com/duckdb/duckdb-go/v2"
 )
 
-func A_query(nd NameData, db *sql.DB) ([]*dns.A, error) {
+func A_query(nd NameData, db *sql.DB) (*[]dns.RR, error) {
 
-	result := make([]*dns.A, 0)
+	result := make([]dns.RR, 0)
 
 	query := fmt.Sprintf(`
 		SELECT ip4_address 
@@ -50,7 +50,7 @@ func A_query(nd NameData, db *sql.DB) ([]*dns.A, error) {
 
 	}
 
-	return result, nil
+	return &result, nil
 }
 
 func AAAA_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
@@ -150,11 +150,12 @@ func query_thread(query_queue *Queue, cache *Cache) {
 			// refuse
 			continue
 		}
-		var rrs *[]dns.RR
-		var err error
 		switch question.(type) {
 		case *dns.A:
-			rrs, err = A_query(data, db)
+			rrs, err := A_query(data, db)
+			if err == nil {
+				cache.Put(question, rrs)
+			}
 		case *dns.AAAA:
 			A_query(data, db)
 		case *dns.TXT:
@@ -167,13 +168,6 @@ func query_thread(query_queue *Queue, cache *Cache) {
 			// refuse
 		}
 
-		if err != nil {
-			query_queue.PopBlocking() // remove the question from the queue
-			continue
-		}
-
-		cache.Put(question, rrs)
 		query_queue.PopBlocking() // remove the question from the queue
-
 	}
 }
