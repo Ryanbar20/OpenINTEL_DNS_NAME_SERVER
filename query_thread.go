@@ -1,47 +1,174 @@
 package ns
 
-import "fmt"
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"log"
+	"net/netip"
 
-func A_query(tld string, year string, month string, day string, dom string) string {
-	return fmt.Sprintf(`
-		SELECT query_name, query_type, ip4_address 
-		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%s/month=%s/day=%s/*.gz.parquet') 
+	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/rdata"
+)
+
+func A_query(nd NameData, db *sql.DB) ([]*dns.A, error) {
+
+	result := make([]*dns.A, 0)
+
+	query := fmt.Sprintf(`
+		SELECT ip4_address 
+		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'A';
-	`, tld, year, month, day, dom)
+	`, nd.tld, nd.year, nd.month, nd.day, dom)
+
+	rows, err := db.Query(query)
+
+	if err != nil {
+		return nil, errors.New("rows could not be gotten")
+	}
+	defer rows.Close()
+	var hdr = &dns.Header{Name: nd.domain + dom, Class: dns.ClassINET}
+
+	for rows.Next() {
+		var ip4addr string
+
+		err := rows.Scan(&ip4addr)
+
+		if err != nil {
+			return nil, errors.New("row could not be parsed")
+
+		}
+
+		addr, err := netip.ParseAddr(ip4addr)
+
+		if err != nil {
+			return nil, errors.New("row could not be parsed")
+
+		}
+		result = append(result, &dns.A{Hdr: *hdr, A: rdata.A{Addr: addr}})
+
+	}
+
+	return result, nil
 }
 
-func AAAA_query(tld string, year string, month string, day string, dom string) string {
-	return fmt.Sprintf(`
+func AAAA_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
+	query := fmt.Sprintf(`
 		SELECT query_name, query_type, ip6_address 
-		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%s/month=%s/day=%s/*.gz.parquet') 
+		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'AAAA';
-	`, tld, year, month, day, dom)
+	`, nd.tld, nd.year, nd.month, nd.day, dom)
+
+	rows, err := db.Query(query)
+
+	if err != nil {
+		return nil, errors.New("rows could not be gotten")
+	}
+	defer rows.Close()
 }
 
-func TXT_query(tld string, year string, month string, day string, dom string) string {
-	return fmt.Sprintf(`
+func TXT_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
+	query := fmt.Sprintf(`
 		SELECT query_name, query_type, txt_text 
-		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%s/month=%s/day=%s/*.gz.parquet') 
+		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'TXT';
-	`, tld, year, month, day, dom)
+	`, nd.tld, nd.year, nd.month, nd.day, dom)
+
+	rows, err := db.Query(query)
+
+	if err != nil {
+		return nil, errors.New("rows could not be gotten")
+	}
+	defer rows.Close()
 }
 
-func MX_query(tld string, year string, month string, day string, dom string) string {
-	return fmt.Sprintf(`
+func MX_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
+	query := fmt.Sprintf(`
 		SELECT query_name, query_type, mx_address, mx_preference 
-		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%s/month=%s/day=%s/*.gz.parquet') 
+		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'MX';
-	`, tld, year, month, day, dom)
+	`, nd.tld, nd.year, nd.month, nd.day, dom)
+
+	rows, err := db.Query(query)
+
+	if err != nil {
+		return nil, errors.New("rows could not be gotten")
+	}
+	defer rows.Close()
 }
 
-func NS_query(tld string, year string, month string, day string, dom string) string {
-	return fmt.Sprintf(`
+func NS_query(nd NameData, db *sql.DB) ([]*dns.RR, error) {
+	query := fmt.Sprintf(`
 		SELECT query_name, query_type, ns_address 
-		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%s/month=%s/day=%s/*.gz.parquet') 
+		FROM read_parquet('s3://openintel-public/fdns/basis=zonefile/source=%s/year=%04d/month=%02d/day=%02d/*.gz.parquet') 
 		WHERE query_name = '%s' AND query_type = 'NS';
-	`, tld, year, month, day, dom)
+	`, nd.tld, nd.year, nd.month, nd.day, dom)
+
+	rows, err := db.Query(query)
+
+	if err != nil {
+		return nil, errors.New("rows could not be gotten")
+	}
+	defer rows.Close()
 }
 
-func query_thread() {
+func query_thread(query_queue *Queue, cache *Cache) {
 
+	db, err := sql.Open("duckdb", "")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	setup := []string{
+		"INSTALL httpfs;",
+		"LOAD httpfs;",
+		"SET s3_region='nl-utwente';",
+		"SET s3_url_style='path';",
+		"SET s3_endpoint='object.openintel.nl';",
+		"SET s3_use_ssl=true;",
+		"SET threads=1;",
+	}
+
+	for _, q := range setup {
+		if _, err := db.Exec(q); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	for {
+		question := query_queue.PopBlocking()
+
+		name := question.Header().Name
+		data, success := parseName(name)
+		if !success {
+			// refuse
+			continue
+		}
+		var msg *dns.Msg
+		switch question.(type) {
+		case *dns.A:
+			msg = dns.NewMsg(question.String(), dns.TypeA)
+			rr, err := A_query(data, db)
+		case *dns.AAAA:
+			msg = dns.NewMsg(question.String(), dns.TypeA)
+			A_query(data, db)
+			rr, err := A_query(data, db)
+		case *dns.TXT:
+			msg = dns.NewMsg(question.String(), dns.TypeA)
+			A_query(data, db)
+			rr, err := A_query(data, db)
+		case *dns.MX:
+			msg = dns.NewMsg(question.String(), dns.TypeA)
+			A_query(data, db)
+			rr, err := A_query(data, db)
+		case *dns.NS:
+			msg = dns.NewMsg(question.String(), dns.TypeA)
+			A_query(data, db)
+			rr, err := A_query(data, db)
+		default:
+			// refuse
+		}
+		cache.Put(question, msg)
+	}
 }
