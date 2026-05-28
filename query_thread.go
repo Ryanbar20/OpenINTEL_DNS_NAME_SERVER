@@ -209,13 +209,25 @@ func query_thread(query_queue *Queue, cache *Cache) {
 				cache.Put(question, rrs)
 			}
 		case *dns.AAAA:
-			AAAA_query(data, db)
+			rrs, err := AAAA_query(data, db)
+			if err == nil {
+				cache.Put(question, rrs)
+			}
 		case *dns.TXT:
-			TXT_query(data, db)
+			rrs, err := TXT_query(data, db)
+			if err == nil {
+				cache.Put(question, rrs)
+			}
 		case *dns.MX:
-			MX_query(data, db)
+			rrs, err := MX_query(data, db)
+			if err == nil {
+				cache.Put(question, rrs)
+			}
 		case *dns.NS:
-			NS_query(data, db)
+			rrs, err := NS_query(data, db)
+			if err == nil {
+				cache.Put(question, rrs)
+			}
 		default:
 			// refuse
 		}
