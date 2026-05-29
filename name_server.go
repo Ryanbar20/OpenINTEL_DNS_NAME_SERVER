@@ -48,6 +48,7 @@ func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 		ip = netip.AddrFrom4(ip.As4())
 	}
 
+	hdr.TTL = 0                                             // set TTL to 0 so that wait and limit messages are not cached
 	if i := ns.query_queue.FindRR(r.Question[0]); i != -1 { // check if RR is in cache
 		r.Answer = append(r.Answer, &dns.HINFO{Hdr: *hdr, HINFO: rdata.HINFO{Cpu: "WAIT", Os: fmt.Sprintf("You are in queue position %d", i)}})
 	} else if i := ns.query_queue.FindIP(ip); i != -1 { // check if user is in cache
