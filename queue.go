@@ -1,13 +1,19 @@
 package ns
 
 import (
+	"net/netip"
 	"sync"
 
 	"codeberg.org/miekg/dns"
 )
 
+type QueueEntry struct {
+	rr dns.RR
+	ip netip.Addr
+}
+
 type Queue struct {
-	questions []dns.RR
+	questions []QueueEntry
 	cond      sync.Cond
 
 	maximum_size int
@@ -15,25 +21,37 @@ type Queue struct {
 
 func newQueue(maximum_size int) *Queue {
 
-	return &Queue{questions: make([]dns.RR, 0), cond: *sync.NewCond(&sync.Mutex{}), maximum_size: maximum_size}
+	return &Queue{questions: make([]QueueEntry, 0), cond: *sync.NewCond(&sync.Mutex{}), maximum_size: maximum_size}
 }
 
-func (q *Queue) Push(rr dns.RR) bool {
+func (q *Queue) Push(rr dns.RR, ip netip.Addr) bool {
+	entry := &QueueEntry{rr: rr, ip: ip}
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 	if q.maximum_size == len(q.questions) {
 		return false
 	}
-	q.questions = append(q.questions, rr)
+	q.questions = append(q.questions, *entry)
 	q.cond.Signal()
 	return true
 }
 
-func (q *Queue) Find(rr dns.RR) int {
+func (q *Queue) FindRR(rr dns.RR) int {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 	for i, question := range q.questions {
-		if question.String() == rr.String() {
+		if question.rr.String() == rr.String() {
+			return i
+		}
+	}
+	return -1
+}
+
+func (q *Queue) FindIP(ip netip.Addr) int {
+	q.cond.L.Lock()
+	defer q.cond.L.Unlock()
+	for i, question := range q.questions {
+		if question.ip == question.ip {
 			return i
 		}
 	}
@@ -47,7 +65,7 @@ func (q *Queue) PeekBlocking() dns.RR {
 		q.cond.Wait()
 	}
 	rr := q.questions[0]
-	return rr
+	return rr.rr
 }
 
 func (q *Queue) PopBlocking() dns.RR {
@@ -58,5 +76,5 @@ func (q *Queue) PopBlocking() dns.RR {
 	}
 	rr := q.questions[0]
 	q.questions = q.questions[1:]
-	return rr
+	return rr.rr
 }

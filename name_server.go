@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
+	"net/netip"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,6 +24,18 @@ func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 	if err := r.Unpack(); err != nil {
 		log.Fatalf("%s", err.Error())
 	}
+
+	var ip netip.Addr
+	switch a := w.RemoteAddr().(type) {
+	case *net.UDPAddr:
+		ip, _ = netip.AddrFromSlice(a.IP)
+	case *net.TCPAddr:
+		ip, _ = netip.AddrFromSlice(a.IP)
+	}
+	if ip.Is4In6() {
+		ip = netip.AddrFrom4(ip.As4())
+	}
+
 	var hdr = &dns.Header{Name: r.Question[0].Header().Name + dom, Class: dns.ClassINET}
 	r.Reset() // re-use r
 	r.Response = true
@@ -33,7 +47,7 @@ func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 		return
 	}
 
-	ns.query_queue.Push(r.Question[0])
+	ns.query_queue.Push(r.Question[0], ip)
 
 	r.Answer = append(r.Answer, &dns.HINFO{Hdr: *hdr, HINFO: rdata.HINFO{Cpu: "QUEUE", Os: "QUEUE"}})
 

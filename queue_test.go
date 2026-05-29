@@ -2,6 +2,7 @@ package ns
 
 import (
 	"fmt"
+	"net/netip"
 	"sync"
 	"testing"
 
@@ -27,7 +28,7 @@ func TestQueueOrder(t *testing.T) {
 		defer wg.Done()
 		start.Wait()
 		for i := range 400 {
-			q.Push(txts[i])
+			q.Push(txts[i], netip.Addr{})
 		}
 	}()
 
@@ -38,7 +39,7 @@ func TestQueueOrder(t *testing.T) {
 		start.Wait()
 		for i := range 400 {
 			questionsPopped = append(questionsPopped, q.PopBlocking())
-			if q.Find(questionsPopped[i]) >= 0 {
+			if q.FindRR(questionsPopped[i]) >= 0 {
 				t.Error("Queue pop should remove item")
 			}
 		}
