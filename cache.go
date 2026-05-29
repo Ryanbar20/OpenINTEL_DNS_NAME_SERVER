@@ -18,6 +18,7 @@ func newCache(maximum_size int) *Cache {
 	return &Cache{data: make(map[string][]dns.RR), order: make([]*string, 0), maximum_size: maximum_size}
 }
 
+// puts an entry into the cache. Automatically maintains maximum cache size
 func (c *Cache) Put(rr dns.RR, rrs *[]dns.RR) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -30,6 +31,7 @@ func (c *Cache) Put(rr dns.RR, rrs *[]dns.RR) {
 	c.order = append(c.order, &str)
 }
 
+// gets an entry from the cache
 func (c *Cache) Get(rr dns.RR) (*[]dns.RR, bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()

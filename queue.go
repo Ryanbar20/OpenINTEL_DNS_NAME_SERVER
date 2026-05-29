@@ -24,6 +24,7 @@ func newQueue(maximum_size int) *Queue {
 	return &Queue{questions: make([]QueueEntry, 0), cond: *sync.NewCond(&sync.Mutex{}), maximum_size: maximum_size}
 }
 
+// pushes an entry into the cache
 func (q *Queue) Push(rr dns.RR, ip netip.Addr) bool {
 	entry := &QueueEntry{rr: rr, ip: ip}
 	q.cond.L.Lock()
@@ -36,6 +37,7 @@ func (q *Queue) Push(rr dns.RR, ip netip.Addr) bool {
 	return true
 }
 
+// finds the index of the question RR. -1 if not found
 func (q *Queue) FindRR(rr dns.RR) int {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
@@ -47,6 +49,7 @@ func (q *Queue) FindRR(rr dns.RR) int {
 	return -1
 }
 
+// finds the index of the IP. -1 if not found
 func (q *Queue) FindIP(ip netip.Addr) int {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
@@ -58,6 +61,7 @@ func (q *Queue) FindIP(ip netip.Addr) int {
 	return -1
 }
 
+// waits until it can read the first entry of the queue
 func (q *Queue) PeekBlocking() dns.RR {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
@@ -68,6 +72,7 @@ func (q *Queue) PeekBlocking() dns.RR {
 	return rr.rr
 }
 
+// waits until it can pop the first value off the queue
 func (q *Queue) PopBlocking() dns.RR {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
