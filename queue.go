@@ -25,16 +25,16 @@ func newQueue(maximum_size int) *Queue {
 }
 
 // pushes an entry into the cache
-func (q *Queue) Push(rr dns.RR, ip netip.Addr) bool {
+func (q *Queue) Push(rr dns.RR, ip netip.Addr) int {
 	entry := &QueueEntry{rr: rr, ip: ip}
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 	if q.maximum_size == len(q.questions) {
-		return false
+		return -1
 	}
 	q.questions = append(q.questions, *entry)
 	q.cond.Signal()
-	return true
+	return len(q.questions)
 }
 
 // finds the index of the question RR. -1 if not found

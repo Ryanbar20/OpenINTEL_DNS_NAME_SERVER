@@ -25,6 +25,18 @@ func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 		log.Fatalf("%s", err.Error())
 	}
 
+	var hdr = &dns.Header{Name: r.Question[0].Header().Name + dom, Class: dns.ClassINET}
+	r.Reset() // re-use r
+	r.Response = true
+
+	// check if cache-hit
+	if a, b := ns.cache.Get(r.Question[0]); b == true {
+		r.Answer = append(r.Answer, *a...)
+		r.Pack()
+		io.Copy(w, r)
+		return
+	}
+
 	var ip netip.Addr
 	switch a := w.RemoteAddr().(type) {
 	case *net.UDPAddr:
@@ -36,20 +48,21 @@ func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 		ip = netip.AddrFrom4(ip.As4())
 	}
 
-	var hdr = &dns.Header{Name: r.Question[0].Header().Name + dom, Class: dns.ClassINET}
-	r.Reset() // re-use r
-	r.Response = true
-
-	if a, b := ns.cache.Get(r.Question[0]); b == true {
-		r.Answer = append(r.Answer, *a...)
-		r.Pack()
-		io.Copy(w, r)
-		return
+	if i := ns.query_queue.FindRR(r.Question[0]); i != -1 { // check if RR is in cache
+		r.Answer = append(r.Answer, &dns.HINFO{Hdr: *hdr, HINFO: rdata.HINFO{Cpu: "WAIT", Os: fmt.Sprintf("You are in queue position %d", i)}})
+	} else if i := ns.query_queue.FindIP(ip); i != -1 { // check if user is in cache
+		r.Answer = append(r.Answer, &dns.HINFO{Hdr: *hdr, HINFO: rdata.HINFO{Cpu: "LIMIT", Os: fmt.Sprintf("You already have a query in queue position %d", i)}})
+	} else { // push to queue
+		queue_index := ns.query_queue.Push(r.Question[0], ip)
+		if queue_index == -1 { // if queue limit was reached
+			r.Answer = append(r.Answer, &dns.HINFO{Hdr: *hdr, HINFO: rdata.HINFO{Cpu: "LIMIT", Os: "Queue limit reached"}})
+		} else { // if queue limit was not reached
+			r.Answer = append(r.Answer, &dns.HINFO{
+				Hdr:   *hdr,
+				HINFO: rdata.HINFO{Cpu: "WAIT", Os: fmt.Sprintf("You are in queue position %d", queue_index)},
+			})
+		}
 	}
-
-	ns.query_queue.Push(r.Question[0], ip)
-
-	r.Answer = append(r.Answer, &dns.HINFO{Hdr: *hdr, HINFO: rdata.HINFO{Cpu: "QUEUE", Os: "QUEUE"}})
 
 	r.Pack()
 	io.Copy(w, r)
