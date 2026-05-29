@@ -220,6 +220,9 @@ func query_thread(query_queue *Queue, cache *Cache) {
 		name := question.Header().Name
 		data, success := parseName(name)
 		if !success {
+			fmt.Println("question was not valid")
+			fmt.Println(question.String())
+			fmt.Println(data)
 			// refuse
 			query_queue.PopBlocking() // remove the question from the queue
 			continue
