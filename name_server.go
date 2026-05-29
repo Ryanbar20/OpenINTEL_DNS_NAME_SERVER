@@ -31,16 +31,11 @@ func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 
 	// check if cache-hit
 	if a, b := ns.cache.Get(r.Question[0]); b == true {
-		fmt.Println("cache hit")
-		fmt.Println(r.Question[0].String())
 		r.Answer = append(r.Answer, *a...)
 		r.Pack()
 		io.Copy(w, r)
 		return
 	}
-	fmt.Println("cache miss")
-	fmt.Println(r.Question[0].String())
-	fmt.Println(ns.cache.order)
 
 	var ip netip.Addr
 	switch a := w.RemoteAddr().(type) {
