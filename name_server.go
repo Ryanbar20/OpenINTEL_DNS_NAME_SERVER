@@ -25,17 +25,21 @@ func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 		log.Fatalf("%s", err.Error())
 	}
 
-	var hdr = &dns.Header{Name: r.Question[0].Header().Name + dom, Class: dns.ClassINET}
+	var hdr = &dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}
 	r.Reset() // re-use r
 	r.Response = true
 
 	// check if cache-hit
 	if a, b := ns.cache.Get(r.Question[0]); b == true {
+		fmt.Println("cache hit")
+		fmt.Println(r.Question[0].String())
 		r.Answer = append(r.Answer, *a...)
 		r.Pack()
 		io.Copy(w, r)
 		return
 	}
+	fmt.Println("cache miss")
+	fmt.Println(r.Question[0].String())
 
 	var ip netip.Addr
 	switch a := w.RemoteAddr().(type) {

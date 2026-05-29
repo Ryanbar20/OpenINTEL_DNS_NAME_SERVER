@@ -221,6 +221,7 @@ func query_thread(query_queue *Queue, cache *Cache) {
 		data, success := parseName(name)
 		if !success {
 			// refuse
+			query_queue.PopBlocking() // remove the question from the queue
 			continue
 		}
 		switch question.(type) {
