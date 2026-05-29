@@ -40,7 +40,7 @@ func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 	}
 	fmt.Println("cache miss")
 	fmt.Println(r.Question[0].String())
-	fmt.Println(ns.cache.data)
+	fmt.Println(ns.cache.order)
 
 	var ip netip.Addr
 	switch a := w.RemoteAddr().(type) {

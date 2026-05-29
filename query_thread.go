@@ -216,6 +216,7 @@ func query_thread(query_queue *Queue, cache *Cache) {
 
 	for {
 		question := query_queue.PeekBlocking() // get the question
+		fmt.Println(question.String())
 
 		name := question.Header().Name
 		data, success := parseName(name)
@@ -230,6 +231,7 @@ func query_thread(query_queue *Queue, cache *Cache) {
 		switch question.(type) {
 		case *dns.A:
 			rrs, err := A_query(data, db)
+			fmt.Println(rrs)
 			if err == nil {
 				cache.Put(question, rrs)
 			}
