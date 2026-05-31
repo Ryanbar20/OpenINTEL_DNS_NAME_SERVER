@@ -163,32 +163,35 @@ func query_thread(query_queue *Queue, cache *Cache) {
 	// the checks on data parsing and message type are here for added security
 	for {
 		question := query_queue.PeekBlocking() // get the question
-
-		name := question.Header().Name
-		data, success := parseName(name)
-		if !success {
-			query_queue.PopBlocking() // remove the question from the queue
-			continue
-		}
-		var rrs *[]dns.RR
-		var err error = nil
-		switch question.(type) {
-		case *dns.A:
-			rrs, err = aQuery(data, db)
-		case *dns.AAAA:
-			rrs, err = aaaaQuery(data, db)
-		case *dns.TXT:
-			rrs, err = txtQuery(data, db)
-		case *dns.MX:
-			rrs, err = mxQuery(data, db)
-		case *dns.NS:
-			rrs, err = nsQuery(data, db)
-		default:
-			err = errors.New("Unsupported Type")
-		}
+		rrs, err := handleQuestion(question, db, cache)
 		if err == nil {
 			cache.Put(question, rrs)
 		}
 		query_queue.PopBlocking() // remove the question from the queue
 	}
+}
+
+func handleQuestion(question dns.RR, db *sql.DB, cache *Cache) (*[]dns.RR, error) {
+	name := question.Header().Name
+	data, success := parseName(name)
+	if !success {
+		return nil, errors.New("Invalid name format")
+	}
+	var rrs *[]dns.RR = nil
+	var err error = nil
+	switch question.(type) {
+	case *dns.A:
+		rrs, err = aQuery(data, db)
+	case *dns.AAAA:
+		rrs, err = aaaaQuery(data, db)
+	case *dns.TXT:
+		rrs, err = txtQuery(data, db)
+	case *dns.MX:
+		rrs, err = mxQuery(data, db)
+	case *dns.NS:
+		rrs, err = nsQuery(data, db)
+	default:
+		err = errors.New("Unsupported Type")
+	}
+	return rrs, err
 }
