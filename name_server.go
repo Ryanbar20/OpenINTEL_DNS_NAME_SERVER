@@ -22,6 +22,9 @@ type NameServer struct {
 
 func shouldRefuse(r *dns.Msg) bool {
 	_, b := parseName(r.Question[0].Header().Name)
+	if len(r.Question) != 1 {
+		return true // only allow single-question queries
+	}
 	if !b {
 		return true // invalid format
 	}

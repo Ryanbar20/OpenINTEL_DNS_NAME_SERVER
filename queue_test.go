@@ -10,7 +10,7 @@ import (
 	"codeberg.org/miekg/dns/rdata"
 )
 
-func TestQueueOrder(t *testing.T) {
+func TestMultiThreadQueueOrder(t *testing.T) {
 	var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}
 	q := newQueue(400)
 
