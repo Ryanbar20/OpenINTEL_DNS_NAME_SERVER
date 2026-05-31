@@ -54,7 +54,7 @@ func (q *Queue) FindIP(ip netip.Addr) int {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
 	for i, question := range q.questions {
-		if question.ip == question.ip {
+		if ip.Compare(question.ip) == 0 {
 			return i
 		}
 	}
