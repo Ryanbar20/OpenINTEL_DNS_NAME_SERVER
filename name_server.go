@@ -20,11 +20,12 @@ type NameServer struct {
 	cache       Cache
 }
 
+// checks if a question should be refused. MiekgDNS automatically refuses multi-question queries
 func shouldRefuse(r *dns.Msg) bool {
-	_, b := parseName(r.Question[0].Header().Name)
 	if len(r.Question) != 1 {
-		return true // only allow single-question queries
+		return true // no question
 	}
+	_, b := parseName(r.Question[0].Header().Name)
 	if !b {
 		return true // invalid format
 	}
@@ -36,12 +37,11 @@ func shouldRefuse(r *dns.Msg) bool {
 	}
 }
 
-func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+func (ns *NameServer) handle(_ context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	if err := r.Unpack(); err != nil {
 		log.Fatalf("%s", err.Error())
 	}
 
-	var hdr = &dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}
 	r.Reset() // re-use r
 	r.Response = true
 
@@ -52,6 +52,7 @@ func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 		return
 	}
 
+	var hdr = &dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}
 	// check if cache-hit
 	if a, b := ns.cache.Get(r.Question[0]); b == true {
 		r.Answer = append(r.Answer, *a...)
@@ -72,9 +73,9 @@ func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 	}
 
 	hdr.TTL = 0                                             // set TTL to 0 so that wait and limit messages are not cached
-	if i := ns.query_queue.FindRR(r.Question[0]); i != -1 { // check if RR is in cache
+	if i := ns.query_queue.FindRR(r.Question[0]); i != -1 { // check if RR is in queue
 		r.Answer = append(r.Answer, &dns.HINFO{Hdr: *hdr, HINFO: rdata.HINFO{Cpu: "WAIT", Os: fmt.Sprintf("You are in queue position %d", i)}})
-	} else if i := ns.query_queue.FindIP(ip); i != -1 { // check if user is in cache
+	} else if i := ns.query_queue.FindIP(ip); i != -1 { // check if user is in queue
 		r.Answer = append(r.Answer, &dns.HINFO{Hdr: *hdr, HINFO: rdata.HINFO{Cpu: "LIMIT", Os: fmt.Sprintf("You already have a query in queue position %d", i)}})
 	} else { // push to queue
 		queue_index := ns.query_queue.Push(r.Question[0], ip)
@@ -106,7 +107,7 @@ func NewNameServer(cache_limit int, queue_limit int) *NameServer {
 
 func (ns *NameServer) Start() {
 
-	dns.HandleFunc(dom, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) { handle(ns, ctx, w, r) })
+	dns.HandleFunc(dom, ns.handle)
 
 	go query_thread(&ns.query_queue, &ns.cache)
 	go serve("udp")
