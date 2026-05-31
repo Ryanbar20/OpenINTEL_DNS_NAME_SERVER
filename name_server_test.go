@@ -1,7 +1,9 @@
 package ns
 
 import (
+	"crypto/rand"
 	"net"
+	"net/netip"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -11,6 +13,7 @@ import (
 // mock for a dns Response writer
 type mockDnsResponseWriter struct {
 	dns.ResponseWriter
+	remoteAddr net.Addr
 }
 
 func (m *mockDnsResponseWriter) WriteMsg(msg *dns.Msg) error {
@@ -18,7 +21,10 @@ func (m *mockDnsResponseWriter) WriteMsg(msg *dns.Msg) error {
 }
 
 func (m *mockDnsResponseWriter) RemoteAddr() net.Addr {
-	return &net.IPAddr{}
+	if &m.remoteAddr == nil {
+		return &net.UDPAddr{}
+	}
+	return m.remoteAddr
 }
 
 func (m *mockDnsResponseWriter) Write(bytes []byte) (int, error) {
@@ -27,6 +33,10 @@ func (m *mockDnsResponseWriter) Write(bytes []byte) (int, error) {
 
 func (m *mockDnsResponseWriter) Conn() net.Conn {
 	return nil
+}
+
+func (m *mockDnsResponseWriter) setRemoteAddr(addr net.Addr) {
+	m.remoteAddr = addr
 }
 
 func TestShouldRefuse(t *testing.T) {
@@ -112,5 +122,116 @@ func TestHandleCacheHit(t *testing.T) {
 	ns.handle(nil, w, msg)
 	if msg.Answer[0].String() != txtARR[0].String() {
 		t.Error("the name-server should have seen the record in the cache")
+	}
+}
+
+func TestHandleIPinQueue(t *testing.T) {
+
+	// initalise two distince records
+	txtQRR1 := dns.TXT{
+		Hdr: dns.Header{Name: "20061212.google.com.history.openintel.nl.", Class: dns.ClassINET},
+	}
+	txtQRR2 := dns.TXT{
+		Hdr: dns.Header{Name: "20061222.google.com.history.openintel.nl.", Class: dns.ClassINET},
+	}
+
+	// create a random UDP address
+	ip_bytes := make([]byte, 4)
+	rand.Read(ip_bytes)
+	addr := net.UDPAddr{IP: net.IP(ip_bytes)}
+
+	// create a name server and push qrr1 into the queue
+	// the queue entry will have the same address as addr
+	ns := NewNameServer(10, 10)
+	ns.query_queue.Push(&txtQRR1, netip.AddrFrom4([4]byte(ip_bytes)))
+
+	// create a dns message and submit it to the name server under addr
+	// the ip is in the queue, but since the question is in the queue aswell, a WAIT message is returned
+	{
+		msg := new(dns.Msg)
+		msg.Question = append(msg.Question, &txtQRR1)
+		msg.Pack()
+		w := &mockDnsResponseWriter{}
+		w.setRemoteAddr(&addr)
+		ns.handle(nil, w, msg)
+		switch ans := msg.Answer[0].(type) {
+		case *dns.HINFO:
+			if ans.Cpu != "WAIT" || ans.Os != "You are in queue position 0" {
+				t.Error("Query is in the queue, so a wait message should be returned")
+			}
+		default:
+			t.Error("Query is in the queue, so a wait message should be returned")
+		}
+	}
+
+	// create and submit a new dns message with a different question than the queued one but with the same address (addr)
+	// since the user is in the queue and the question is not, a LIMIT message is sent
+	{
+		msg := new(dns.Msg)
+		msg.Question = append(msg.Question, &txtQRR2)
+		msg.Pack()
+		w := &mockDnsResponseWriter{}
+		w.setRemoteAddr(&addr)
+		ns.handle(nil, w, msg)
+		switch ans := msg.Answer[0].(type) {
+		case *dns.HINFO:
+			if ans.Cpu != "LIMIT" || ans.Os != "You already have a query in queue position 0" {
+				t.Error("User is in the queue and answer is not in cache, so a limit message should be returned")
+			}
+		default:
+			t.Error("User is in the queue and answer is not in cache, so a limit message should be returned")
+		}
+	}
+}
+
+func TestHandleQueueLimit(t *testing.T) {
+
+	txtQRR1 := dns.TXT{
+		Hdr: dns.Header{Name: "20061212.google.com.history.openintel.nl.", Class: dns.ClassINET},
+	}
+	txtQRR2 := dns.TXT{
+		Hdr: dns.Header{Name: "20071212.google.com.history.openintel.nl.", Class: dns.ClassINET},
+	}
+
+	ns := NewNameServer(10, 1)
+	ip_bytes := make([]byte, 4)
+	// create and submit a query from a random IP that gets put into the queue
+	{
+		msg := new(dns.Msg)
+		msg.Question = append(msg.Question, &txtQRR1)
+		msg.Pack()
+		w := &mockDnsResponseWriter{}
+		rand.Read(ip_bytes)
+		addr := net.TCPAddr{IP: net.IP(ip_bytes)}
+		w.setRemoteAddr(&addr)
+		ns.handle(nil, w, msg)
+		switch ans := msg.Answer[0].(type) {
+		case *dns.HINFO:
+			if ans.Cpu != "WAIT" || ans.Os != "You are in queue position 0" {
+				t.Error("Query is put in the queue, so a WAIT should be sent as the queue is not over its limit")
+			}
+		default:
+			t.Error("Query is put in the queue, so a WAIT should be sent as the queue is not over its limit")
+		}
+	}
+	// create and submit a query from a different IP that gets put into the queue
+	// this adding to the queue sees that the queue limit was reached, and thus a LIMIT message is returned instead
+	{
+		msg := new(dns.Msg)
+		msg.Question = append(msg.Question, &txtQRR2)
+		msg.Pack()
+		w := &mockDnsResponseWriter{}
+		ip_bytes[len(ip_bytes)-1] ^= 0xFF
+		addr := net.TCPAddr{IP: net.IP(ip_bytes)}
+		w.setRemoteAddr(&addr)
+		ns.handle(nil, w, msg)
+		switch ans := msg.Answer[0].(type) {
+		case *dns.HINFO:
+			if ans.Cpu != "LIMIT" || ans.Os != "Queue limit reached" {
+				t.Error("Query is put in the queue, but the queue is over its limit, so a LIMIT message should be sent")
+			}
+		default:
+			t.Error("Query is put in the queue, but the queue is over its limit, so a LIMIT message should be sent")
+		}
 	}
 }
