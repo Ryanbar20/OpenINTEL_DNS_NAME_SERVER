@@ -1,15 +1,14 @@
 package main
 
 import (
-	"codeberg.org/miekg/dns"
+	ns "github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER"
 )
-
-var dom = "test.nl."
-var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}
 
 func main() {
 
-	nameserver := ns.
+	nameserver := ns.NewNameServer(10, 10)
+
+	nameserver.Start()
 	// dns.HandleFunc(dom, handle_query)
 
 	// go query_thread()
