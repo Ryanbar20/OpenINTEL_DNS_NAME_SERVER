@@ -29,12 +29,12 @@ func (q *Queue) Push(rr dns.RR, ip netip.Addr) int {
 	entry := &QueueEntry{rr: rr, ip: ip}
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()
+	defer q.cond.Signal()
 	if q.maximum_size == len(q.questions) {
 		return -1
 	}
 	q.questions = append(q.questions, *entry)
-	q.cond.Signal()
-	return len(q.questions)
+	return len(q.questions) - 1 // return the index of the question
 }
 
 // finds the index of the question RR. -1 if not found
