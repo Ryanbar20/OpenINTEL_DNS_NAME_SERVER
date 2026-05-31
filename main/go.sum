@@ -24,6 +24,10 @@ github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.18 h1:011r8AVstldwBAUniCRLM5
 github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.18/go.mod h1:1tCTgza1OxZpZvKUoh4ECzkHYfj8R+yKZhFKc5f0yk0=
 github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.19 h1:VOhZGZVRQofy1gF/SfSh9NrK6AgPtZZ12Q5BbfVnMHQ=
 github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.19/go.mod h1:1tCTgza1OxZpZvKUoh4ECzkHYfj8R+yKZhFKc5f0yk0=
+github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.20 h1:pwnOzDlHGiwv2JBeEm351PrJy4bHRdC5ZykPUT2/EZk=
+github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.20/go.mod h1:1tCTgza1OxZpZvKUoh4ECzkHYfj8R+yKZhFKc5f0yk0=
+github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.21 h1:dFjmAFtR1K4E8rsYD/pGghVoyGqGyX1RuL4UKbrAtg8=
+github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.21/go.mod h1:1tCTgza1OxZpZvKUoh4ECzkHYfj8R+yKZhFKc5f0yk0=
 github.com/andybalholm/brotli v1.2.0 h1:ukwgCxwYrmACq68yiUqwIWnGY0cTPox/M94sVwToPjQ=
 github.com/andybalholm/brotli v1.2.0/go.mod h1:rzTDkvFWvIrjDXZHkuS16NPggd91W3kUSvPlQ1pLaKY=
 github.com/apache/arrow-go/v18 v18.5.1 h1:yaQ6zxMGgf9YCYw4/oaeOU3AULySDlAYDOcnr4LdHdI=
