@@ -190,7 +190,6 @@ func NS_query(nd NameData, db *sql.DB) (*[]dns.RR, error) {
 	return &result, nil
 }
 
-// TODO: cache a nonexistent answer if that answer does not exist
 func query_thread(query_queue *Queue, cache *Cache) {
 
 	db, err := sql.Open("duckdb", "")
@@ -215,13 +214,14 @@ func query_thread(query_queue *Queue, cache *Cache) {
 		}
 	}
 
+	// message refusing is handled in name_server
+	// the checks on data parsing and message type are here for added security
 	for {
 		question := query_queue.PeekBlocking() // get the question
 
 		name := question.Header().Name
 		data, success := parseName(name)
 		if !success {
-			// refuse
 			query_queue.PopBlocking() // remove the question from the queue
 			continue
 		}
@@ -252,7 +252,6 @@ func query_thread(query_queue *Queue, cache *Cache) {
 				cache.Put(question, rrs)
 			}
 		default:
-			// refuse
 		}
 
 		query_queue.PopBlocking() // remove the question from the queue

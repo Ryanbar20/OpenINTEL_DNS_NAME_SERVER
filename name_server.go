@@ -20,6 +20,19 @@ type NameServer struct {
 	cache       Cache
 }
 
+func shouldRefuse(r *dns.Msg) bool {
+	_, b := parseName(r.Question[0].Header().Name)
+	if !b {
+		return true // invalid format
+	}
+	switch r.Question[0].(type) {
+	case *dns.A, *dns.AAAA, *dns.NS, *dns.MX, *dns.TXT:
+		return false
+	default:
+		return true // unsupported type
+	}
+}
+
 func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	if err := r.Unpack(); err != nil {
 		log.Fatalf("%s", err.Error())
@@ -28,6 +41,13 @@ func handle(ns *NameServer, ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 	var hdr = &dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}
 	r.Reset() // re-use r
 	r.Response = true
+
+	if shouldRefuse(r) {
+		r.Rcode = dns.RcodeRefused
+		r.Pack()
+		io.Copy(w, r)
+		return
+	}
 
 	// check if cache-hit
 	if a, b := ns.cache.Get(r.Question[0]); b == true {
