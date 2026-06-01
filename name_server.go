@@ -16,10 +16,11 @@ import (
 )
 
 type NameServer struct {
-	query_queue Queue
-	cache       Cache
-	ip          string
-	port        int
+	query_queue  Queue
+	cache        Cache
+	ip           string
+	port         int
+	memory_limit string
 }
 
 // checks if a question should be refused. MiekgDNS automatically refuses multi-question queries
@@ -103,15 +104,15 @@ func serve(net string, ip string, port int) {
 	}
 }
 
-func NewNameServer(cache_limit int, queue_limit int, ip string, port int) *NameServer {
-	return &NameServer{query_queue: *newQueue(queue_limit), cache: *newCache(cache_limit), ip: ip, port: port}
+func NewNameServer(cache_limit int, queue_limit int, ip string, port int, memory_limit string) *NameServer {
+	return &NameServer{query_queue: *newQueue(queue_limit), cache: *newCache(cache_limit), ip: ip, port: port, memory_limit: memory_limit}
 }
 
 func (ns *NameServer) Start() {
 
 	dns.HandleFunc(dom, ns.handle)
 
-	go query_thread(&ns.query_queue, &ns.cache)
+	go query_thread(&ns.query_queue, &ns.cache, ns.memory_limit)
 	go serve("udp", ns.ip, ns.port)
 
 	sig := make(chan os.Signal, 1)

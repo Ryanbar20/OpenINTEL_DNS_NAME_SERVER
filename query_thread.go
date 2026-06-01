@@ -135,7 +135,7 @@ func nsQuery(nd NameData, db *sql.DB) (*[]dns.RR, error) {
 	})
 }
 
-func query_thread(query_queue *Queue, cache *Cache) {
+func query_thread(query_queue *Queue, cache *Cache, memory_limit string) {
 
 	db, err := sql.Open("duckdb", "")
 	if err != nil {
@@ -151,6 +151,7 @@ func query_thread(query_queue *Queue, cache *Cache) {
 		"SET s3_endpoint='object.openintel.nl';",
 		"SET s3_use_ssl=true;",
 		"SET threads=1;",
+		"SET memory_limit = '" + memory_limit + "';", // avoid memory hogging
 	}
 
 	for _, q := range setup {
