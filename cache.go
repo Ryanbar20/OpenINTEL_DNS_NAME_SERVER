@@ -6,6 +6,8 @@ import (
 	"codeberg.org/miekg/dns"
 )
 
+// Possibly look into storing with DuckDB/ storing only dns.RDATA as values to save memory usage
+
 type Cache struct {
 	data  map[string][]dns.RR
 	order []*string

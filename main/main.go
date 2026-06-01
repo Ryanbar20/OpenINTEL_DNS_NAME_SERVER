@@ -6,8 +6,7 @@ import (
 
 func main() {
 
-	nameserver := ns.NewNameServer(10, 10)
-
+	nameserver := ns.NewNameServer(10, 10, "[::]", ns.NAME_SERVER_PORT)
 	nameserver.Start()
 	// dns.HandleFunc(dom, handle_query)
 

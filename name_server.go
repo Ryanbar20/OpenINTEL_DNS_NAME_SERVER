@@ -18,6 +18,8 @@ import (
 type NameServer struct {
 	query_queue Queue
 	cache       Cache
+	ip          string
+	port        int
 }
 
 // checks if a question should be refused. MiekgDNS automatically refuses multi-question queries
@@ -93,16 +95,16 @@ func (ns *NameServer) handle(_ context.Context, w dns.ResponseWriter, r *dns.Msg
 	io.Copy(w, r)
 }
 
-func serve(net string) {
-	addr := fmt.Sprintf("[::]:%d", NAME_SERVER_PORT)
+func serve(net string, ip string, port int) {
+	addr := fmt.Sprintf("%s:%d", ip, port)
 	server := &dns.Server{Addr: addr, Net: net, ReusePort: true, MaxTCPQueries: -1}
 	if err := server.ListenAndServe(); err != nil {
 		log.Printf("Failed to setup the "+net+" server: %s", err.Error())
 	}
 }
 
-func NewNameServer(cache_limit int, queue_limit int) *NameServer {
-	return &NameServer{query_queue: *newQueue(queue_limit), cache: *newCache(cache_limit)}
+func NewNameServer(cache_limit int, queue_limit int, ip string, port int) *NameServer {
+	return &NameServer{query_queue: *newQueue(queue_limit), cache: *newCache(cache_limit), ip: ip, port: port}
 }
 
 func (ns *NameServer) Start() {
@@ -110,7 +112,7 @@ func (ns *NameServer) Start() {
 	dns.HandleFunc(dom, ns.handle)
 
 	go query_thread(&ns.query_queue, &ns.cache)
-	go serve("udp")
+	go serve("udp", ns.ip, ns.port)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)

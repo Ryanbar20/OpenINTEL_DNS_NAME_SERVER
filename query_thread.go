@@ -166,6 +166,8 @@ func query_thread(query_queue *Queue, cache *Cache) {
 		rrs, err := handleQuestion(question, db, cache)
 		if err == nil {
 			cache.Put(question, rrs)
+		} else {
+			cache.Put(question, nil) // if there is no answer, put that as an answer
 		}
 		query_queue.PopBlocking() // remove the question from the queue
 	}
