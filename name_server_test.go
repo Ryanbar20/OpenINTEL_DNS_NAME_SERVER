@@ -72,7 +72,7 @@ func TestShouldRefuse(t *testing.T) {
 	ACCmsg6.Question = append(ACCmsg6.Question, &ACCtxtRR)
 	ACCmsg6.Pack()
 
-	ns := NewNameServer(10, 10)
+	ns := NewNameServer(10, 10, "[::]", NAME_SERVER_PORT)
 	w := &mockDnsResponseWriter{}
 
 	if ns.handle(nil, w, REFmsg1); REFmsg1.Rcode != dns.RcodeRefused {
@@ -111,7 +111,7 @@ func TestHandleCacheHit(t *testing.T) {
 		TXT: rdata.TXT{Txt: []string{"Test 2"}},
 	}}
 
-	ns := NewNameServer(10, 10)
+	ns := NewNameServer(10, 10, "[::]", NAME_SERVER_PORT)
 	ns.cache.Put(&txtQRR, &txtARR)
 
 	msg := new(dns.Msg)
@@ -142,7 +142,7 @@ func TestHandleIPinQueue(t *testing.T) {
 
 	// create a name server and push qrr1 into the queue
 	// the queue entry will have the same address as addr
-	ns := NewNameServer(10, 10)
+	ns := NewNameServer(10, 10, "[::]", NAME_SERVER_PORT)
 	ns.query_queue.Push(&txtQRR1, netip.AddrFrom4([4]byte(ip_bytes)))
 
 	// create a dns message and submit it to the name server under addr
@@ -193,7 +193,7 @@ func TestHandleQueueLimit(t *testing.T) {
 		Hdr: dns.Header{Name: "20071212.google.com.history.openintel.nl.", Class: dns.ClassINET},
 	}
 
-	ns := NewNameServer(10, 1)
+	ns := NewNameServer(10, 1, "[::]", NAME_SERVER_PORT)
 	ip_bytes := make([]byte, 4)
 	// create and submit a query from a random IP that gets put into the queue
 	{

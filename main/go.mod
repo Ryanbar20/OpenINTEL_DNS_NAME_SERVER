@@ -4,7 +4,7 @@ go 1.26.3
 
 require (
 	codeberg.org/miekg/dns v0.6.79
-	github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.21
+	github.com/Ryanbar20/OpenINTEL_DNS_NAME_SERVER v0.0.22
 )
 
 require (
