@@ -1,21 +1,42 @@
 #!/bin/bash
 
 # start the name-server
-./../main/main 10 2 [::]:10000 &
+./../main/main 10 2 [::]:10000 >/dev/null &
 pid=$!
 sleep 3 
 
-# add 2 distinct IPs to dig from
-sudo ip addr add 127.0.0.2/8 dev lo
-sudo ip addr add 127.0.0.3/8 dev lo
 
-# submit three queries. Observe that the last gets answered with a limit message as the queue is full
-dig @127.0.0.1 -p 10000 -b 127.0.0.1 "20231001.google.nu.history.openintel.nl" A > out7.txt
-dig @127.0.0.1 -p 10000 -b 127.0.0.2 "20231002.google.nu.history.openintel.nl" A >> out7.txt
-dig @127.0.0.1 -p 10000 -b 127.0.0.3 "20231003.google.nu.history.openintel.nl" A >> out7.txt
+#clear output file
+echo '' > out7.txt 
+
+
+echo "============================================================" >> out7.txt
+echo 'submit a query and wait. Observe that the retry returns an answer' >> out7.txt
+echo "============================================================" >> out7.txt
+dig @127.0.0.1 -p 10000  "20231001.google.nu.history.openintel.nl" A >> out7.txt
+sleep 20
+dig @127.0.0.1 -p 10000  "20231001.google.nu.history.openintel.nl" A >> out7.txt
+
+echo "============================================================" >> out7.txt
+echo 'submit a different query' >> out7.txt
+echo "============================================================" >> out7.txt
+dig @127.0.0.1 -p 10000  "20231002.google.nu.history.openintel.nl" A >> out7.txt
+
+echo "============================================================" >> out7.txt
+echo 'resubmit the first query. Observe that it returns an answer' >> out7.txt
+echo "============================================================" >> out7.txt
+dig @127.0.0.1 -p 10000  "20231001.google.nu.history.openintel.nl" A >> out7.txt
+
+echo "============================================================" >> out7.txt
+echo 'resubmit the second query. Observe that it is still in the queue' >> out7.txt
+echo "============================================================" >> out7.txt
+dig @127.0.0.1 -p 10000  "20231002.google.nu.history.openintel.nl" A >> out7.txt
+sleep 20
+
+echo "============================================================" >> out7.txt
+echo 'resubmit the second query after waiting 20 seconds. Observe that it is now done processing' >> out7.txt
+echo "============================================================" >> out7.txt
+dig @127.0.0.1 -p 10000  "20231002.google.nu.history.openintel.nl" A >> out7.txt
 
 # kill the name server
-kill $pid 
-
-sudo ip addr del 127.0.0.2/8 dev lo
-sudo ip addr del 127.0.0.3/8 dev lo
+kill $pid
