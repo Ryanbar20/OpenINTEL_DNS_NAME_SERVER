@@ -48,6 +48,6 @@ func main() {
 		log.Fatal("port must be an integer")
 	}
 
-	nameserver := ns.NewNameServer(cache_limit, queue_limit, host, port)
+	nameserver := ns.NewNameServer(cache_limit, queue_limit, host, port, ns.MEMORY_LIMIT)
 	nameserver.Start()
 }
