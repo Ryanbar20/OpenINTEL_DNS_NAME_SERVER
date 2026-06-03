@@ -18,11 +18,11 @@ The results of this test are that each query gets answered by a `wait` message, 
 
 ## Test 2
 ### Description
-In Test 2, DNS queries are to be sent to the name-server. These queries should contain a question with an invalid format.
+In Test 2, DNS queries are to be sent to the name-server. These queries should contain a question with an invalid format or an usupported type.
 ### Test target
-Test 2 asserts that the name server correctly handles the question format `YYYYMMDD.<domain>.history.openintel.nl`.
+Test 2 asserts that the name server correctly handles the question format `YYYYMMDD.<domain>.history.openintel.nl`. It also asserts that the server refuses unsupported types.
 ### Expected results
-The results of this test should be that all queries with an invalidly formatted question are refused by the name server.
+The results of this test should be that all queries with an invalidly formatted question or unsupported are refused by the name server.
 
 ## Test 3
 ### Description

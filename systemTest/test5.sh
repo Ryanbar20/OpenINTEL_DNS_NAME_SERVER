@@ -28,9 +28,9 @@ dig @127.0.0.1 -p 10000 -b 127.0.0.3 "20231003.google.nu.history.openintel.nl" A
 
 
 echo "============================================================" >> out5.txt
-echo 'Send a different query from the first IP. Observe that it gets answered with a personal limit' >> out5.txt
+echo 'Send a different query (different from all previous queries) from the first IP. Observe that it gets answered with a personal limit' >> out5.txt
 echo "============================================================" >> out5.txt
-dig @127.0.0.1 -p 10000 -b 127.0.0.1 "20231002.google.nu.history.openintel.nl" A >> out5.txt
+dig @127.0.0.1 -p 10000 -b 127.0.0.1 "20201002.google.nu.history.openintel.nl" A >> out5.txt
 
 
 # kill the name server
