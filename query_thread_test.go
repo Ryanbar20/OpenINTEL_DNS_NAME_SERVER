@@ -2,6 +2,7 @@ package ns
 
 import "testing"
 
+// tests the query string generation in query thread
 func TestGetQueryString(t *testing.T) {
 	nameData := NameData{tld: "com", domain: "www.example.com.", year: 2006, month: 2, day: 2}
 	query := getQueryString(nameData, []string{"test", "1", "2", "3"}, "TESTQTYPE")

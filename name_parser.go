@@ -13,7 +13,7 @@ type NameData struct {
 	day    int
 }
 
-// returns the data in the domain name
+// parses a domain name and returns the data from it
 func parseName(name string) (data NameData, b bool) {
 	labels := strings.Split(name, ".")
 	if labels[0] == "www" { // ignore www label
@@ -26,6 +26,7 @@ func parseName(name string) (data NameData, b bool) {
 	}
 
 	// ignore if name does not end in history.openintel.nl or if it has no domain
+	// (<5 labels means that there is no space to put a domain)
 	if l < 5 ||
 		labels[l-3] != "history" ||
 		labels[l-2] != "openintel" ||
