@@ -6,8 +6,7 @@ import (
 	"codeberg.org/miekg/dns"
 )
 
-// Possibly look into storing with DuckDB/ storing only dns.RDATA as values to save memory usage
-
+// A Cache struct for storing database query results
 type Cache struct {
 	data  map[string][]dns.RR
 	order []*string
@@ -16,6 +15,7 @@ type Cache struct {
 	maximum_size int
 }
 
+// Create a new cache with a maximum size
 func newCache(maximum_size int) *Cache {
 	return &Cache{data: make(map[string][]dns.RR), order: make([]*string, 0), maximum_size: maximum_size}
 }

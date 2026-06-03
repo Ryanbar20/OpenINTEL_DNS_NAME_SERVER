@@ -9,6 +9,7 @@ import (
 	"codeberg.org/miekg/dns/rdata"
 )
 
+// Test the cache by adding some entries to it and retrieving them
 func TestCache(t *testing.T) {
 	var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}
 	cache := newCache(2)
@@ -41,6 +42,7 @@ func TestCache(t *testing.T) {
 	}
 }
 
+// Test the cache by adding some entries to it and retrieving them in multiple goroutines
 func TestCacheMultiThread(t *testing.T) {
 
 	var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}

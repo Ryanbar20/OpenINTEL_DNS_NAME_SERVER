@@ -19,12 +19,13 @@ type Queue struct {
 	maximum_size int
 }
 
+// creates a new queue with a maximum size
 func newQueue(maximum_size int) *Queue {
 
 	return &Queue{questions: make([]QueueEntry, 0), cond: *sync.NewCond(&sync.Mutex{}), maximum_size: maximum_size}
 }
 
-// pushes an entry into the cache
+// pushes an entry into the queue
 func (q *Queue) Push(rr dns.RR, ip netip.Addr) int {
 	entry := &QueueEntry{rr: rr, ip: ip}
 	q.cond.L.Lock()

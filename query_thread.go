@@ -13,6 +13,7 @@ import (
 	_ "github.com/duckdb/duckdb-go/v2"
 )
 
+// gets the appropriate query string for querying the OpenINTEL database
 func getQueryString(nd NameData, columns []string, qtype string) string {
 	cols := strings.Join(columns, ", ")
 	return fmt.Sprintf(`
@@ -22,6 +23,8 @@ func getQueryString(nd NameData, columns []string, qtype string) string {
 	`, cols, nd.tld, nd.year, nd.month, nd.day, nd.domain, qtype)
 }
 
+// a generic function for querying the database.
+// the scan parameter will extract the RR from a row.
 func rrQuery(db *sql.DB, query string, scan func(*sql.Rows) (dns.RR, error)) (*[]dns.RR, error) {
 	result := make([]dns.RR, 0)
 
@@ -135,8 +138,10 @@ func nsQuery(nd NameData, db *sql.DB) (*[]dns.RR, error) {
 	})
 }
 
+// the main query thread loop
 func query_thread(query_queue *Queue, cache *Cache, memory_limit string) {
 
+	// setup the database
 	db, err := sql.Open("duckdb", "")
 	if err != nil {
 		log.Fatal(err)
@@ -151,7 +156,7 @@ func query_thread(query_queue *Queue, cache *Cache, memory_limit string) {
 		"SET s3_endpoint='object.openintel.nl';",
 		"SET s3_use_ssl=true;",
 		"SET threads=1;",
-		"SET memory_limit = '" + memory_limit + "';", // avoid memory hogging
+		"SET memory_limit = '" + memory_limit + "';", // avoid memory overflow
 	}
 
 	for _, q := range setup {
@@ -164,17 +169,19 @@ func query_thread(query_queue *Queue, cache *Cache, memory_limit string) {
 	// the checks on data parsing and message type are here for added security
 	for {
 		question := query_queue.PeekBlocking() // get the question
-		rrs, err := handleQuestion(question, db, cache)
+		rrs, err := handleQuestion(question, db)
 		if err == nil {
 			cache.Put(question, rrs)
 		} else {
-			cache.Put(question, nil) // if there is no answer, put that as an answer
+			empty_rrs := make([]dns.RR, 0)
+			cache.Put(question, &empty_rrs) // if there is no answer, put that as an answer
 		}
 		query_queue.PopBlocking() // remove the question from the queue
 	}
 }
 
-func handleQuestion(question dns.RR, db *sql.DB, cache *Cache) (*[]dns.RR, error) {
+// handles a question by performing the correct database query
+func handleQuestion(question dns.RR, db *sql.DB) (*[]dns.RR, error) {
 	name := question.Header().Name
 	data, success := parseName(name)
 	if !success {

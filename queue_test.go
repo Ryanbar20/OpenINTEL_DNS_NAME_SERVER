@@ -12,6 +12,7 @@ import (
 	"codeberg.org/miekg/dns/rdata"
 )
 
+// tests the ordering of the Queue in a multithreaded setting.
 func TestMultiThreadQueueOrder(t *testing.T) {
 	queue_len := 400
 	var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}
@@ -72,6 +73,7 @@ func TestMultiThreadQueueOrder(t *testing.T) {
 	}
 }
 
+// Tests the maintaining of the maximum queue size
 func TestMaxQueueSize(t *testing.T) {
 	var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}
 	q := newQueue(5)
@@ -105,6 +107,7 @@ func TestMaxQueueSize(t *testing.T) {
 
 }
 
+// tests the Peek and Pop functions for the Queue
 func TestPeekAndPopBlocking(t *testing.T) {
 	q := newQueue(2)
 	var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}

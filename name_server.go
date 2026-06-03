@@ -23,7 +23,7 @@ type NameServer struct {
 	memory_limit string
 }
 
-// checks if a question should be refused. MiekgDNS automatically refuses multi-question queries
+// checks if a question should be refused. MiekgDNS automatically refuses multi-question queries but not 0 question queries
 func shouldRefuse(r *dns.Msg) bool {
 	if len(r.Question) != 1 {
 		return true // no question
@@ -40,6 +40,7 @@ func shouldRefuse(r *dns.Msg) bool {
 	}
 }
 
+// handles a DNS query
 func (ns *NameServer) handle(_ context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	if err := r.Unpack(); err != nil {
 		log.Fatalf("%s", err.Error())
@@ -75,7 +76,8 @@ func (ns *NameServer) handle(_ context.Context, w dns.ResponseWriter, r *dns.Msg
 		ip = netip.AddrFrom4(ip.As4())
 	}
 
-	hdr.TTL = 0                                             // set TTL to 0 so that wait and limit messages are not cached
+	// set TTL to 0 so that wait and limit messages are not cached
+	hdr.TTL = 0
 	if i := ns.query_queue.FindRR(r.Question[0]); i != -1 { // check if RR is in queue
 		r.Answer = append(r.Answer, &dns.HINFO{Hdr: *hdr, HINFO: rdata.HINFO{Cpu: "WAIT", Os: fmt.Sprintf("You are in queue position %d", i)}})
 	} else if i := ns.query_queue.FindIP(ip); i != -1 { // check if user is in queue
@@ -96,6 +98,7 @@ func (ns *NameServer) handle(_ context.Context, w dns.ResponseWriter, r *dns.Msg
 	io.Copy(w, r)
 }
 
+// starts the name server main thread
 func serve(net string, ip string, port int) {
 	addr := fmt.Sprintf("%s:%d", ip, port)
 	server := &dns.Server{Addr: addr, Net: net, ReusePort: true, MaxTCPQueries: -1}
@@ -104,10 +107,12 @@ func serve(net string, ip string, port int) {
 	}
 }
 
+// create a new name server with a cache and queue limit, an ip and port and a memory limit (for DuckDB).
 func NewNameServer(cache_limit int, queue_limit int, ip string, port int, memory_limit string) *NameServer {
 	return &NameServer{query_queue: *newQueue(queue_limit), cache: *newCache(cache_limit), ip: ip, port: port, memory_limit: memory_limit}
 }
 
+// starts the name server
 func (ns *NameServer) Start() {
 
 	dns.HandleFunc(dom, ns.handle)

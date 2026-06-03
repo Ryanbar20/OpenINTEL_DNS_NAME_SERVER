@@ -39,6 +39,7 @@ func (m *mockDnsResponseWriter) setRemoteAddr(addr net.Addr) {
 	m.remoteAddr = addr
 }
 
+// Tests that the name-server refuses invalid queries or queries for wrong types
 func TestShouldRefuse(t *testing.T) {
 
 	// invalid Name format
@@ -101,6 +102,7 @@ func TestShouldRefuse(t *testing.T) {
 
 }
 
+// Tests that the name server correctly detects and handles cache-hits.
 func TestHandleCacheHit(t *testing.T) {
 
 	txtQRR := dns.TXT{
@@ -125,6 +127,7 @@ func TestHandleCacheHit(t *testing.T) {
 	}
 }
 
+// Tests that the name server correctly handles situations where a user has a query in the queue already (by sending a LIMIT)
 func TestHandleIPinQueue(t *testing.T) {
 
 	// initalise two distince records
@@ -184,6 +187,7 @@ func TestHandleIPinQueue(t *testing.T) {
 	}
 }
 
+// Tests that the name server correctly handles situations where the query queue is full (by sending a LIMIT)
 func TestHandleQueueLimit(t *testing.T) {
 
 	txtQRR1 := dns.TXT{

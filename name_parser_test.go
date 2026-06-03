@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+// Test the name parser by having it parse some valid and invalid domain names
 func TestNameParser(t *testing.T) {
 	type questionDataPair struct {
 		question string
