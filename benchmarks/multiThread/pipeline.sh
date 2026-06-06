@@ -15,14 +15,15 @@ sudo ip addr add 127.0.0.3/8 dev lo
 echo '' > out.txt
 echo '' > debug.txt
 
-# start the name-server
-./../../main/main 10 10 [::]:10000 >/dev/null &
-pid=$!
-sleep 3 
+
 
 
 for i in {1..30} ;
 do
+    # start a new name-server
+    ./../../main/main 10 10 [::]:10000 >/dev/null &
+    pid=$!
+    sleep 3 
     {
         # seed the cache
     dig @127.0.0.1 -p 10000 "20201001.google.nu.history.openintel.nl" A
