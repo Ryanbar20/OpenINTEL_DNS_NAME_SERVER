@@ -1,4 +1,8 @@
 OpenINTEL_DNS_NAME_SERVER.exe
 main/main
 systemTest/out*
+<<<<<<< HEAD
 benchmarks\multiThread\*.txt
+=======
+benchmark\multiThread\*.txt
+>>>>>>> 096b3e424c713187ae24b41ff8e8b53587c83687
