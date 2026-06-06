@@ -12,8 +12,12 @@ sudo ip addr add 127.0.0.2/8 dev lo
 sudo ip addr add 127.0.0.3/8 dev lo
 
 # clear the output files
-echo '' > out.txt
-echo '' > debug.txt
+
+out="PipelineOut.txt"
+debug="PipelineDebug.txt"
+
+echo '' > "$out"
+echo '' > "$debug"
 
 
 
@@ -109,17 +113,17 @@ do
         }
     )
 
-    echo "$checkOutput" >> debug.txt
+    echo "$checkOutput" >> "$debug"
     if grep -q '"ERR: "' <<< "$checkOutput"; then
-        echo 'INVALID TEST' >> debug.txt
+        echo 'INVALID TEST' >> "$debug"
     else 
         #now dnsperf
-        echo "============= DNSPERF ===========" >> out.txt
-        dnsperf -m udp -s 127.0.0.1 -p 10000 -d ./dnsperf-queries.txt -c 4 -q 200 -l 30 >> out.txt
+        echo "============= DNSPERF ===========" >> "$out"
+        dnsperf -m udp -s 127.0.0.1 -p 10000 -d ./dnsperf-queries.txt -c 4 -q 200 -l 30 >> "$out"
 
 
-        echo "============= CONFIRM QUEUE ENTRIES (at least 1 should still be in the queue so just check the last query) ===========" >> out.txt
-        dig @127.0.0.1 -p 10000 "20231002.google.fr.history.openintel.nl" A >> out.txt
+        echo "============= CONFIRM QUEUE ENTRIES (at least 1 should still be in the queue so just check the last query) ===========" >> "$out"
+        dig @127.0.0.1 -p 10000 "20231002.google.fr.history.openintel.nl" A >> "$out"
     fi
 
     # kill the name server
