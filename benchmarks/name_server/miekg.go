@@ -13,27 +13,17 @@ import (
 	"codeberg.org/miekg/dns/rdata"
 )
 
-var hdr = &dns.Header{Name: "history.openintel.nl.", Class: dns.ClassINET}
+var answerMap = make(map[string]dns.RR, 0)
 
-func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+func handle(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	if err := r.Unpack(); err != nil {
 		log.Fatalf("%s", err.Error())
 	}
 	r.Reset() // re-use r
 	r.Response = true
-
-	txt1 := dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Test1"}}}
-	txt2 := dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Test2"}}}
-	txt3 := dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Test3"}}}
-
-	// support only these queries and return their answers
-	switch r.Question[0].(type) {
-	case *dns.A:
-		r.Answer = append(r.Answer, &txt1)
-	case *dns.AAAA:
-		r.Answer = append(r.Answer, &txt2)
-	case *dns.NS:
-		r.Answer = append(r.Answer, &txt3)
+	rr := answerMap[r.Question[0].String()]
+	if rr != nil {
+		r.Answer = append(r.Answer, rr)
 	}
 
 	r.Pack()
@@ -49,7 +39,22 @@ func serve(net string) {
 }
 
 func main() {
-	dns.HandleFunc("20201001.google.nu.history.openintel.nl.", reflect)
+
+	var hdr = &dns.Header{Name: "20201001.google.nu.history.openintel.nl.", Class: dns.ClassINET}
+
+	// support only the following queries and return their answers
+	// this corresponds to the cached answers in the pipeline
+	q1 := dns.A{Hdr: *hdr}
+	q2 := dns.AAAA{Hdr: *hdr}
+	q3 := dns.NS{Hdr: *hdr}
+	txt1 := dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Test1"}}}
+	txt2 := dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Test2"}}}
+	txt3 := dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{"Test3"}}}
+	answerMap[q1.String()] = &txt1
+	answerMap[q2.String()] = &txt2
+	answerMap[q3.String()] = &txt3
+
+	dns.HandleFunc(hdr.Name, handle)
 	go serve("udp")
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
