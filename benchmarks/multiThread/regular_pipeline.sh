@@ -1,20 +1,8 @@
 #!/bin/bash
 
-if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root"
-   echo "This is because it needs to create an additional IP loopback address to locally send dns queries from"
-   echo "This address will be deleted afterwards"
-   exit 1
-fi
-
-# add 2 distinct IPs to dig from
-sudo ip addr add 127.0.0.2/8 dev lo
-sudo ip addr add 127.0.0.3/8 dev lo
-
 # clear the output files
-
-out="PipelineOut.txt"
-debug="PipelineDebug.txt"
+out="RegularPipelineOut.txt"
+debug="RegularPipelineDebug.txt"
 
 echo '' > "$out"
 echo '' > "$debug"
@@ -85,32 +73,6 @@ do
             fi
             echo "$output"
         }
-
-
-
-        #fill and confirm the queue
-        echo "============= FILL THE QUEUE ==========="
-        {
-            output=$(dig @127.0.0.1 -p 10000 -b 127.0.0.1 "20231001.google.fr.history.openintel.nl" A)
-            if ! grep -q '"You are in queue position 0"' <<< "$output"; then
-                echo "ERR: Queue was not correctly filled"
-            fi
-            echo "$output"
-        }
-        {
-            output=$(dig @127.0.0.1 -p 10000 -b 127.0.0.2 "20231001.google.fr.history.openintel.nl" AAAA)
-            if ! grep -q '"You are in queue position 1"' <<< "$output"; then
-                echo "ERR: Queue was not correctly filled"
-            fi
-            echo "$output"
-        }
-        {
-            output=$(dig @127.0.0.1 -p 10000 -b 127.0.0.3 "20231002.google.fr.history.openintel.nl" A)
-            if ! grep -q '"You are in queue position 2"' <<< "$output"; then
-                echo "ERR: Queue was not correctly filled"
-            fi
-            echo "$output"
-        }
     )
 
     echo "$checkOutput" >> "$debug"
@@ -120,20 +82,9 @@ do
         #now dnsperf
         echo "============= DNSPERF ===========" >> "$out"
         dnsperf -m udp -s 127.0.0.1 -p 10000 -d ./dnsperf-queries.txt -c 4 -q 200 -l 30 >> "$out"
-
-
-        echo "============= CONFIRM QUEUE ENTRIES (at least 1 should still be in the queue so just check the last query) ===========" >> "$out"
-        dig @127.0.0.1 -p 10000 "20231002.google.fr.history.openintel.nl" A >> "$out"
     fi
 
     # kill the name server
     kill $pid
 
 done
-
-
-
-
-sudo ip addr del 127.0.0.2/8 dev lo
-sudo ip addr del 127.0.0.3/8 dev lo
-
