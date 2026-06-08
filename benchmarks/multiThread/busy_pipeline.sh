@@ -98,14 +98,14 @@ do
             echo "$output"
         }
         {
-            output=$(dig @127.0.0.1 -p 10000 -b 127.0.0.2 "20231001.google.fr.history.openintel.nl" AAAA)
+            output=$(dig @127.0.0.1 -p 10000 -b 127.0.0.2 "20231002.google.fr.history.openintel.nl" A)
             if ! grep -q '"You are in queue position 1"' <<< "$output"; then
                 echo "ERR: Queue was not correctly filled"
             fi
             echo "$output"
         }
         {
-            output=$(dig @127.0.0.1 -p 10000 -b 127.0.0.3 "20231002.google.fr.history.openintel.nl" A)
+            output=$(dig @127.0.0.1 -p 10000 -b 127.0.0.3 "20231001.google.fr.history.openintel.nl" AAAA)
             if ! grep -q '"You are in queue position 2"' <<< "$output"; then
                 echo "ERR: Queue was not correctly filled"
             fi
@@ -122,8 +122,30 @@ do
         dnsperf -m udp -s 127.0.0.1 -p 10000 -d ./dnsperf-queries.txt -c 4 -q 200 -l 30 >> "$out"
 
 
-        echo "============= CONFIRM QUEUE ENTRIES (at least 1 should still be in the queue so just check the last query) ===========" >> "$out"
-        dig @127.0.0.1 -p 10000 "20231002.google.fr.history.openintel.nl" A >> "$out"
+        echo "============= CONFIRM QUEUE PROCESSING (the first query should around 30 seconds faster than the second) ===========" >> "$out"
+        /usr/bin/time -f 'Query 1 took: %E' bash -c '
+        while true; do
+            sleep 1
+            output=$(dig @127.0.0.1 -p 10000 "20231001.google.fr.history.openintel.nl" A)
+
+            if ! grep -q "HINFO \"WAIT\"" <<< "$output"; then
+                echo "$output"
+                break
+            fi
+        done
+        ' >> "$out" 2>&1
+
+        /usr/bin/time -f 'Query 2 took: %E' bash -c '
+        while true; do
+            sleep 1
+            output=$(dig @127.0.0.1 -p 10000 "20231002.google.fr.history.openintel.nl" A)
+
+            if ! grep -q "HINFO \"WAIT\"" <<< "$output"; then
+                echo "$output"
+                break
+            fi
+        done
+        ' >> "$out" 2>&1
     fi
 
     # kill the name server
