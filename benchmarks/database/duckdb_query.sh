@@ -19,29 +19,35 @@ echo '' > "$out6"
 for i in {1..30};
 do
     /usr/bin/time -v ./duckdb_query 1 
+    sleep 1
 done >> "$out1" 2>&1
 
 for i in {1..30};
 do
     /usr/bin/time -v ./duckdb_query 2
+    sleep 1
 done >> "$out2" 2>&1
 
 for i in {1..30};
 do
     /usr/bin/time -v ./duckdb_query 3
+    sleep 1
 done >> "$out3" 2>&1
 
 for i in {1..30};
 do
     /usr/bin/time -v ./duckdb_query 4
+    sleep 1
 done >> "$out4" 2>&1
 
 for i in {1..30};
 do
     /usr/bin/time -v ./duckdb_query 5
+    sleep 1
 done >> "$out5" 2>&1
 
 for i in {1..30};
 do
     /usr/bin/time -v ./duckdb_query 6
+    sleep 1
 done >> "$out6" 2>&1
