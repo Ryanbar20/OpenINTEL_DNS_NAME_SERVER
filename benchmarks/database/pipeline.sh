@@ -29,7 +29,7 @@ sleep 3
 dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" A
 
 while true; do
-    sleep 1
+    sleep 0.010
     output=$(dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" A)
 
     if ! grep -q "HINFO \"WAIT\"" <<< "$output"; then
@@ -55,7 +55,7 @@ sleep 3
 dig @127.0.0.1 -p 10000 "20231001.google.fr.history.openintel.nl" A
 
 while true; do
-    sleep 1
+    sleep 0.010
     output=$(dig @127.0.0.1 -p 10000 "20231001.google.fr.history.openintel.nl" A)
 
     if ! grep -q "HINFO \"WAIT\"" <<< "$output"; then
@@ -81,7 +81,7 @@ sleep 3
 dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" AAAA
 
 while true; do
-    sleep 1
+    sleep 0.010
     output=$(dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" AAAA)
 
     if ! grep -q "HINFO \"WAIT\"" <<< "$output"; then
@@ -107,7 +107,7 @@ sleep 3
 dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" MX
 
 while true; do
-    sleep 1
+    sleep 0.010
     output=$(dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" MX)
 
     if ! grep -q "HINFO \"WAIT\"" <<< "$output"; then
@@ -133,7 +133,7 @@ sleep 3
 dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" NS
 
 while true; do
-    sleep 1
+    sleep 0.010
     output=$(dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" NS)
 
     if ! grep -q "HINFO \"WAIT\"" <<< "$output"; then
@@ -159,7 +159,7 @@ sleep 3
 dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" TXT
 
 while true; do
-    sleep 1
+    sleep 0.010
     output=$(dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" TXT)
 
     if ! grep -q "HINFO \"WAIT\"" <<< "$output"; then
