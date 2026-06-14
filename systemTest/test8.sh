@@ -30,6 +30,6 @@ do
     done;
 done;
 echo "============================================================" >> out8.txt
-echo 'Observe that the name-server process never exceeded the memory limit by much.' >> out8.txt
+echo 'Observe the name-server process memory usage (compare this to a test run with a different memory limit).' >> out8.txt
 echo "============================================================" >> out8.txt
 pkill main  

@@ -1,10 +1,5 @@
 # System tests
 This directory contains bash scripts for executing relevant system tests for the name-server.
-The provided system tests test the following requirements identified in the corresponding paper. 
-
-
-- [ ] TODO#1 Refer to the corresponding paper.
-
 
 ## Test 1
 ### Description
@@ -61,3 +56,11 @@ In test 7, a query is to be sent to this name-server and retries should be sent 
 This test asserts that the server correctly implements a multithreaded design with separation between cache-miss and cache-hit queries.
 ### Expected results
 The first query will be answered. After this, the second query is sent and the first query is re-sent. This retransmission of the first query gets answered befor the second query is done processing. This is asserted by seeing that retries of the second query still return `wait` messages after the retransmission of the first query is answered.
+
+## Test 8
+### Description
+In test 8, many cache-miss queries are sent to the name-server and each is retried until it returns an answer. After this, a new name-server is started with a different memory-limit, to which the same cache-miss queries are sent.
+### Test target
+This test asserts that the server correctly applies the DuckDB memory limit by comparing the memory usage of the first name-server to that of the second.
+### Expected results
+The process memory usage is expected to be higher than the DuckDB limit, as there is name-server and memory allocator overhead. To validate that the memory limit is applied, the process memory usage of the first name-server is expected to differ from that of the second name-server about as much as the difference in DuckDB memory limit.
