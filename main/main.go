@@ -12,8 +12,8 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 4 {
-		fmt.Printf("Usage: %s <cache_limit> <queue_limit> <ip:port>\n", os.Args[0])
+	if len(os.Args) != 5 {
+		fmt.Printf("Usage: %s <cache_limit> <queue_limit> <ip:port> <memory_limit>\n", os.Args[0])
 		os.Exit(1)
 	}
 
@@ -48,6 +48,8 @@ func main() {
 		log.Fatal("port must be an integer")
 	}
 
-	nameserver := ns.NewNameServer(cache_limit, queue_limit, host, port, ns.MEMORY_LIMIT)
+	mem := os.Args[4]
+
+	nameserver := ns.NewNameServer(cache_limit, queue_limit, host, port, mem)
 	nameserver.Start()
 }
