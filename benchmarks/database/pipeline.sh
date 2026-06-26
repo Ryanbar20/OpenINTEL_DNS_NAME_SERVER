@@ -23,7 +23,7 @@ do
 
 echo "========== RUNNING ========" >> "$out1"
 # start a new name-server
-/usr/bin/time -v ./../../main/main 10 10 [::]:10000 >>"$out1" 2>&1 &
+/usr/bin/time -v ./../../main/main 10 10 [::]:10000 4GB >>"$out1" 2>&1 &
 sleep 3 
 /usr/bin/time -f "Elapsed: %E seconds" bash -c '
 dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" A
@@ -49,7 +49,7 @@ do
 
 echo "========== RUNNING ========" >> "$out2"
 # start a new name-server
-/usr/bin/time -v ./../../main/main 10 10 [::]:10000 >>"$out2" 2>&1 &
+/usr/bin/time -v ./../../main/main 10 10 [::]:10000 4GB >>"$out2" 2>&1 &
 sleep 3 
 /usr/bin/time -f "Elapsed: %E seconds" bash -c '
 dig @127.0.0.1 -p 10000 "20231001.google.fr.history.openintel.nl" A
@@ -75,7 +75,7 @@ do
 
 echo "========== RUNNING ========" >> "$out3"
 # start a new name-server
-/usr/bin/time -v ./../../main/main 10 10 [::]:10000 >>"$out3" 2>&1 &
+/usr/bin/time -v ./../../main/main 10 10 [::]:10000 4GB >>"$out3" 2>&1 &
 sleep 3 
 /usr/bin/time -f "Elapsed: %E seconds" bash -c '
 dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" AAAA
@@ -101,7 +101,7 @@ do
 
 echo "========== RUNNING ========" >> "$out4"
 # start a new name-server
-/usr/bin/time -v ./../../main/main 10 10 [::]:10000 >>"$out4" 2>&1 &
+/usr/bin/time -v ./../../main/main 10 10 [::]:10000 4GB >>"$out4" 2>&1 &
 sleep 3 
 /usr/bin/time -f "Elapsed: %E seconds" bash -c '
 dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" MX
@@ -127,7 +127,7 @@ do
 
 echo "========== RUNNING ========" >> "$out5"
 # start a new name-server
-/usr/bin/time -v ./../../main/main 10 10 [::]:10000 >>"$out5" 2>&1 &
+/usr/bin/time -v ./../../main/main 10 10 [::]:10000 4GB >>"$out5" 2>&1 &
 sleep 3 
 /usr/bin/time -f "Elapsed: %E seconds" bash -c '
 dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" NS
@@ -153,7 +153,7 @@ do
 
 echo "========== RUNNING ========" >> "$out6"
 # start a new name-server
-/usr/bin/time -v ./../../main/main 10 10 [::]:10000 >>"$out6" 2>&1 &
+/usr/bin/time -v ./../../main/main 10 10 [::]:10000 4GB >>"$out6" 2>&1 &
 sleep 3 
 /usr/bin/time -f "Elapsed: %E seconds" bash -c '
 dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" TXT

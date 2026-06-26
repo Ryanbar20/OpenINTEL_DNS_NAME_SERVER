@@ -56,7 +56,7 @@ func (ns *NameServer) handle(_ context.Context, w dns.ResponseWriter, r *dns.Msg
 		return
 	}
 
-	var hdr = &dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}
+	var hdr = &dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET, TTL: 60}
 	// check if cache-hit
 	if a, b := ns.cache.Get(r.Question[0]); b == true {
 		r.Answer = append(r.Answer, *a...)

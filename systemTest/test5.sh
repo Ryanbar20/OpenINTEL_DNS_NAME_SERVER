@@ -8,7 +8,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # start the name-server
-./../main/main 10 2 [::]:10000 >/dev/null &
+./../main/main 10 2 [::]:10000 4GB >/dev/null &
 pid=$!
 sleep 3 
 

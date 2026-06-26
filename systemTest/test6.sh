@@ -9,7 +9,7 @@ fi
 
 
 # start the name-server
-./../main/main 10 10 [::]:10000 >/dev/null &
+./../main/main 10 10 [::]:10000 4GB >/dev/null &
 pid=$!
 sleep 3 
 

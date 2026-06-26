@@ -25,7 +25,7 @@ echo '' > "$debug"
 for i in {1..30} ;
 do
     # start a new name-server
-    ./../../main/main 10 10 [::]:10000 >/dev/null &
+    ./../../main/main 10 10 [::]:10000 4GB >/dev/null &
     pid=$!
     sleep 3 
     {
@@ -127,18 +127,6 @@ do
         while true; do
             sleep 1
             output=$(dig @127.0.0.1 -p 10000 "20231001.google.fr.history.openintel.nl" A)
-
-            if ! grep -q "HINFO \"WAIT\"" <<< "$output"; then
-                echo "$output"
-                break
-            fi
-        done
-        ' >> "$out" 2>&1
-
-        /usr/bin/time -f 'Query 2 took: %E' bash -c '
-        while true; do
-            sleep 1
-            output=$(dig @127.0.0.1 -p 10000 "20231002.google.fr.history.openintel.nl" A)
 
             if ! grep -q "HINFO \"WAIT\"" <<< "$output"; then
                 echo "$output"
