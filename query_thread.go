@@ -63,7 +63,7 @@ func aQuery(nd NameData, db *sql.DB) (*[]dns.RR, error) {
 			return nil, errors.New("row could not be parsed")
 
 		}
-		return &dns.A{Hdr: dns.Header{Name: nd.domain + dom, Class: dns.ClassINET}, A: rdata.A{Addr: addr}}, nil
+		return &dns.A{Hdr: dns.Header{Name: nd.domain + dom, Class: dns.ClassINET, TTL: 60}, A: rdata.A{Addr: addr}}, nil
 	})
 }
 
@@ -85,7 +85,7 @@ func aaaaQuery(nd NameData, db *sql.DB) (*[]dns.RR, error) {
 			return nil, errors.New("row could not be parsed")
 
 		}
-		return &dns.AAAA{Hdr: dns.Header{Name: nd.domain + dom, Class: dns.ClassINET}, AAAA: rdata.AAAA{Addr: addr}}, nil
+		return &dns.AAAA{Hdr: dns.Header{Name: nd.domain + dom, Class: dns.ClassINET, TTL: 60}, AAAA: rdata.AAAA{Addr: addr}}, nil
 	})
 }
 
@@ -101,7 +101,7 @@ func txtQuery(nd NameData, db *sql.DB) (*[]dns.RR, error) {
 			return nil, errors.New("row could not be parsed")
 
 		}
-		return &dns.TXT{Hdr: dns.Header{Name: nd.domain + dom, Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{txt}}}, nil
+		return &dns.TXT{Hdr: dns.Header{Name: nd.domain + dom, Class: dns.ClassINET, TTL: 60}, TXT: rdata.TXT{Txt: []string{txt}}}, nil
 	})
 }
 
@@ -117,7 +117,7 @@ func mxQuery(nd NameData, db *sql.DB) (*[]dns.RR, error) {
 			return nil, errors.New("row could not be parsed")
 
 		}
-		return &dns.MX{Hdr: dns.Header{Name: nd.domain + dom, Class: dns.ClassINET},
+		return &dns.MX{Hdr: dns.Header{Name: nd.domain + dom, Class: dns.ClassINET, TTL: 60},
 			MX: rdata.MX{Mx: mx_addr, Preference: mx_pref}}, nil
 
 	})
@@ -134,7 +134,7 @@ func nsQuery(nd NameData, db *sql.DB) (*[]dns.RR, error) {
 			return nil, errors.New("row could not be parsed")
 
 		}
-		return &dns.NS{Hdr: dns.Header{Name: nd.domain + dom, Class: dns.ClassINET}, NS: rdata.NS{Ns: ns_addr}}, nil
+		return &dns.NS{Hdr: dns.Header{Name: nd.domain + dom, Class: dns.ClassINET, TTL: 60}, NS: rdata.NS{Ns: ns_addr}}, nil
 	})
 }
 
