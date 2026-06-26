@@ -27,8 +27,9 @@ while true; do
 done
 
 echo "============================================================" >> out3.txt
-echo 'retry the query on 2 second intervals and see that it keeps on giving the answer' >> out3.txt
+echo 'retry the query after the TTL expires and see that it still returns the answer' >> out3.txt
 echo "============================================================" >> out3.txt
+sleep 65
 for i in {1..5}
 do 
 	dig @127.0.0.1 -p 10000 "20231001.google.nu.history.openintel.nl" A >> out3.txt
