@@ -42,8 +42,6 @@ echo "============================================================" >> out8.txt
 /usr/bin/time -v ./../main/main 10 10 [::]:10000 500MB >> out8.txt 2>&1 &
 sleep 3 
 
-#clear output file
-echo '' > out8.txt 
 
 echo "============================================================" >> out8.txt
 echo 'submit n queries.' >> out8.txt
