@@ -28,5 +28,5 @@ echo 'test 6 done'
 bash ./test7.sh
 echo 'test 7 done'
 
-# bash ./test8.sh 15
-# echo 'test 8 done'
+bash ./test8.sh 15
+echo 'test 8 done'
